@@ -1,0 +1,1 @@
+..\AppData\Roaming\npm\react-native start
