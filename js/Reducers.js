@@ -1,5 +1,5 @@
 import * as Actions from './Actions'
-import { combineReducers } from 'react-redux'
+import { combineReducers } from 'redux'
 
 const initialState = {
     location: Actions.PossibleRoutes.INIT,
@@ -8,7 +8,7 @@ const initialState = {
     db: {}
 }
 
-export default function navReducer(state = initialState, action) {
+export function navReducer(state = initialState, action) {
     switch (action.type) {
         case Actions.NAVIGATE:
             return Object.assign({}, state, {
@@ -20,7 +20,7 @@ export default function navReducer(state = initialState, action) {
     }
 }
 
-export default function userReducer(state = initialState, action) {
+export function userReducer(state = initialState, action) {
     switch (action.type) {
         case Actions.USER:
             return Object.assign({}, state, action.fields)
@@ -29,7 +29,9 @@ export default function userReducer(state = initialState, action) {
     }
 }
 
-export const appCombinedReducers = combineReducers({
+const appCombinedReducers = combineReducers({
     navReducer,
     userReducer
 })
+
+export default appCombinedReducers

@@ -8,7 +8,7 @@ const style = StyleSheet.create({
         'justifyContent' : 'center'
     },
     'end-a': {
-        'justifyContent': 'end'
+        'justifyContent': 'flex-end'
     },
     'center-b': {
         'alignItems' : 'center'
@@ -28,6 +28,8 @@ const style = StyleSheet.create({
     }
 })
 
-export default function _s(s) {
-    return Object.assign({}, s.split(' ').map(str => style[str]))
+export const gradientA = ['#FFFFFF','#74FD71']
+
+export default function _s(s, o) {
+    return Object.assign({}, s.split(' ').map(str => style[str]), o || {})
 }

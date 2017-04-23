@@ -9,8 +9,6 @@ APP_STATE = {
         fetching: #{boolean}
         response: #{array__object}
     }
-
-
 }
 */
 
@@ -21,7 +19,7 @@ export const PossibleRoutes = {
     LOGIN: 'LOGIN',
     REGISTER: 'REGISTER'
 }
-export default function navigateTo(location, params = {}) {
+export function navigateTo(location, params = {}) {
     return {
         type: NAVIGATE,
         location,
@@ -33,20 +31,20 @@ export default function navigateTo(location, params = {}) {
 export const FETCH = 'FETCH'
 export const REQUEST = 'REQUEST'
 export const RECEIVE = 'RECEIVE'
-export default function requestData(queryKey, params) {
+export function requestData(queryKey, params) {
     return {
         type: REQUEST,
         queryKey, params
     }
 }
-export default function receiveData(rows) {
+export function receiveData(rows) {
     return {
         type: RECEIVE,
         rows
     }
 }
 
-export default function fetchData(queryKey, params) {
+export function fetchData(queryKey, params) {
     return function(dispatch) {
         
     }
@@ -54,7 +52,7 @@ export default function fetchData(queryKey, params) {
 
 /* -- */
 export const USER = 'USER'
-export default function updateUserData(fields) {
+export function updateUserData(fields) {
     return {
         type: USER,
         fields

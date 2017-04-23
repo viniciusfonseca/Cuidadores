@@ -3,12 +3,17 @@ import React from 'react'
 import {
     View, ActivityIndicator
 } from 'react-native'
-import { _s } from '../Style'
+import _s from '../Style'
 
-export default class InitPage extends React.Component {
+import * as Actions from '../Actions'
+import { connect } from 'react-redux'
+
+import LinearGradient from 'react-native-linear-gradient'
+
+export default class Init extends React.Component {
     componentDidMount() {
         setTimeout(() => {
-
+            this.props.dispatch(Actions.navigateTo('Login'))
         }, 3000)
     }
 
@@ -20,3 +25,9 @@ export default class InitPage extends React.Component {
         )
     }
 }
+
+const mapStateToProps = state => {
+    location: state.location
+}
+
+export const InitPage = connect(mapStateToProps)(InitPage)

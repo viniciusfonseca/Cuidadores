@@ -20,6 +20,7 @@ export default class User {
     }
 
     _status = User.STATUS.NOT_INITIATED
+    db = null
 
     fields = {
         id:       "",
@@ -32,17 +33,19 @@ export default class User {
         phone:    ""
     }
 
+    constructor(db) { this.db = db }
+
     init = async() => {
         try {
             let id = await AsyncStorage.getItem('id')
             if (id !== null) {
-                _status = User.STATUS.INITIATED_FILLED
+                this._status = User.STATUS.INITIATED_FILLED
             }
             else {
-                _status = User.STATUS.INITIATED_NULL
+                this._status = User.STATUS.INITIATED_NULL
             }
         } catch(e) {
-            _status = User.INIT_ERROR
+            this._status = User.INIT_ERROR
             throw new UserStorageError("Error initializing user structure.")
         }
     }
@@ -58,11 +61,23 @@ export default class User {
         return userPtr
     }
 
-    write = async(data) => {
+    write = async data => {
         let asyncOperations = []
         Object.keys(data).filter(key => !!key && key in this.fields).forEach(key => {
             asyncOperations.push(AsyncStorage.setItem(key, data[key].toString()))
         })
         return await Promise.all(asyncOperations)
+    }
+
+    performAuthentication = async(login, pass) => {
+        let res = null
+        try {
+            res = await this.db.fetchData('authentication', {
+                email: login, pass
+            })
+            return !!(res && res.rows && res.rows.length && res.rows[0].R)
+        } catch (e) {
+            throw e
+        }
     }
 }
