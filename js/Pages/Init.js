@@ -30,4 +30,5 @@ const mapStateToProps = state => {
     location: state.location
 }
 
-export const InitPage = connect(mapStateToProps)(InitPage)
+const InitPage = connect(mapStateToProps)(InitPage)
+export default InitPage
