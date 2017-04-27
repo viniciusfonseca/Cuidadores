@@ -12,19 +12,18 @@ import configureStore from './configureStore'
 
 import * as Actions from './Actions'
 
-// import { AppNavigator } from './AppNavigator'
-
 import Database from './Backend/Database'
 import User from './Backend/User'
 
 import LinearGradient from 'react-native-linear-gradient'
 import _s, { gradientC } from './Style'
 
-import InitPage from './Pages/InitPage'
+import InitPage from './Pages/Init'
+import LoginPage from './Pages/Login'
 
 let store = configureStore()
 
-const NavBar = props => (
+export const NavBar = props => (
   <LinearGradient style={_s("flex-row flex-stretch", {
     height: props.shouldShowNavBar ? 60 : 0 
   })} colors={gradientC}>
@@ -34,14 +33,15 @@ const NavBar = props => (
 
 export function noop() {}
 
-export default class Cuidadores extends React.Component {
+class Cuidadores extends React.Component {
   db = null
   navStack = [{
     index: 0,
-    title: 'init'
+    title: Actions.PossibleRoutes.INIT
   }]
 
-  constructor() {
+  constructor(props) {
+    super(props)
     this.state = {
       shouldShowNavBar: false
     }
@@ -59,7 +59,9 @@ export default class Cuidadores extends React.Component {
   }
 
   componentWillUnmount() {
-    this.storeUnsubscribeFnPtr()
+    if (this.storeUnsubscribeFnPtr != null) {
+      this.storeUnsubscribeFnPtr()
+    }
   }
 
   onAppStateChange() {
@@ -81,11 +83,11 @@ export default class Cuidadores extends React.Component {
           navigationBar={<NavBar shouldShowNavBar={this.state.shouldShowNavBar}/>}
           initialRouteStack={this.navStack}
           renderScene={route => {
-            switch (route) {
+            switch (route.title) {
               case Actions.PossibleRoutes.INIT:
                 return <InitPage />
               case Actions.PossibleRoutes.LOGIN:
-                return
+                return <LoginPage />
             }
           }}/>
       </Provider>

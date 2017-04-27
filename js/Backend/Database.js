@@ -50,7 +50,6 @@ export default class Database {
         if (!q) {
             throw new DatabaseResult(DatabaseResult.STATUS.EMPTY_QUERY_SQL_BASE)
         }
-        //Alert.alert('will replace', q)
         q = q.replace(/<\w+>/g, sub => {
             sub = sub.replace(/^<|>$/g, '')
             let filterCfg = preset.filters.find(filter => filter.name === sub)
@@ -66,7 +65,6 @@ export default class Database {
             }
             return filterCfg.SQL.replace(/<\?>/g, params[sub] || "")
         })
-        //Alert.alert('will query', q)
         try {
             let qResult = (await this._dbPtr.executeSql(q)).pop()
             let rows = []
