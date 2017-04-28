@@ -8,7 +8,9 @@ https://nodejs.org/en/download/
 Depois faça o setup do Java 8, Android SDK e React Native como descrito neste link (tutoriais p/ Windows, Linux & Mac):
 https://facebook.github.io/react-native/docs/getting-started.html
 
-Para testar, certifique-se que as variáveis de ambiente `JAVA_HOME` e `ANDROID_HOME` estão apontando para os caminhos de instalação corretos. Certifique-se também de que algum dispositivo Android (ou emulador, que pode ser do Android SDK ou Genymotion) está conectado à sua máquina. Para isso, abra o CMD se estiver no Windows ou o BASH se estiver em um ambiente Linux/Unix, e rode o comando:
+Abra o CMD se estiver no Windows ou o BASH se estiver em um ambiente Linux/Unix, e rode o comando `git clone https://github.com/viniciusfonseca/Cuidadores` para clonar o repositório. Depois, dentro da pasta do projeto, rode o comando `npm install` para instalar os módulos do Node necessários (a pasta `./node_modules` não é intercalada aos arquivos do projeto, portanto o procedimento é obrigatório).
+
+Para testar, certifique-se que as variáveis de ambiente `JAVA_HOME` e `ANDROID_HOME` estão apontando para os caminhos de instalação corretos. Certifique-se também de que algum dispositivo Android (ou emulador, que pode ser do Android SDK ou Genymotion) está conectado à sua máquina. Para isso,  e rode o comando:
 
 `$ adb devices`
 
