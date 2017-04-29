@@ -13,7 +13,10 @@ import LinearGradient from 'react-native-linear-gradient'
 class Init extends React.Component {
     componentDidMount() {
         setTimeout(() => {
-            this.props.dispatch(Actions.navigateTo(Actions.PossibleRoutes.LOGIN))
+            let action = Actions.navigateTo(Actions.PossibleRoutes.LOGIN, {
+                $replace: true
+            })
+            this.props.dispatch(action)
         }, 3000)
     }
 
@@ -26,9 +29,7 @@ class Init extends React.Component {
     }
 }
 
-const mapStateToProps = state => ({
-    location: state.location
-})
+const mapStateToProps = state => ({})
 
 const InitPage = connect(mapStateToProps)(Init)
 export default InitPage

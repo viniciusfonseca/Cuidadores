@@ -1,35 +1,22 @@
-import React from 'react'
+import React             from 'react'
 import {
-  AppRegistry,
-  StyleSheet,
-  Text,
-  View, Alert,
-  Navigator
-} from 'react-native';
+  AppRegistry, Text, View,
+  Alert,       Navigator,
+  BackAndroid
+}                        from 'react-native';
 
-import { Provider } from 'react-redux'
-import configureStore from './configureStore'
+import { Provider }      from 'react-redux'
+import configureStore    from './configureStore'
 
-import * as Actions from './Actions'
+import * as Actions      from './Actions'
 
-import Database from './Backend/Database'
-import User from './Backend/User'
+import Database          from './Backend/Database'
+import User              from './Backend/User'
 
-import LinearGradient from 'react-native-linear-gradient'
-import _s, { gradientC } from './Style'
-
-import InitPage from './Pages/Init'
-import LoginPage from './Pages/Login'
+import InitPage          from './Pages/Init'
+import LoginPage         from './Pages/Login'
 
 let store = configureStore()
-
-export const NavBar = props => (
-  <LinearGradient style={_s("flex-row flex-stretch", {
-    height: props.shouldShowNavBar ? 60 : 0 
-  })} colors={gradientC}>
-
-  </LinearGradient>
-)
 
 export function noop() {}
 
@@ -39,12 +26,21 @@ class Cuidadores extends React.Component {
     index: 0,
     title: Actions.PossibleRoutes.INIT
   }]
+  lastNav = 0
+  navigator = null
 
   constructor(props) {
     super(props)
     this.state = {
       shouldShowNavBar: false
     }
+    BackAndroid.addEventListener("hardwareBackPress", () => {
+      if (this.navStack.length > 1) {
+        this.navigator.pop()
+        return true
+      }
+      return false
+    })
   }
 
   storeUnsubscribeFnPtr = null
@@ -55,7 +51,7 @@ class Cuidadores extends React.Component {
     this.db.init().then(noop, err => {
       Alert.alert("Error", err.message)
     })
-    this.storeUnsubscribeFnPtr = store.subscribe(this.onAppStateChange.bind(this))
+    this.storeUnsubscribeFnPtr = store.subscribe( this.onAppStateChange.bind(this) )
   }
 
   componentWillUnmount() {
@@ -71,16 +67,50 @@ class Cuidadores extends React.Component {
         shouldShowNavBar: nextState.shouldShowNavBar
       })
     }
+    console.log("*** LOG: WILL VERIFY NEXTSTATE LOCATION ***")
+    console.log( JSON.stringify(nextState) )
+    console.log("*** ***")
+    if (nextState.location && this.lastNav !== nextState.location.lastNav) {
+      this.lastNav = nextState.location.lastNav
+      this.handleNavigation(nextState.location)
+    }
   }
 
-  navigator = null
+  handleNavigation(locationPtr) {
+    console.log("*** LOG: CALL HANDLE NAVIGATION")
+    if (!locationPtr.name) {
+      return
+    }
+    if (locationPtr.index < 0) {
+      this.navigator.popN(-locationPtr.index)
+      return
+    }
+    let nextRoute = this.castActionAsRoute(locationPtr)
+    if (locationPtr.params.$replace) {
+      console.log("*** LOG NEXT ROUTE ***\n" + JSON.stringify(nextRoute) )
+      this.navigator.replace(nextRoute)
+    }
+    else {
+      this.navigator.push(nextRoute)
+    }
+  }
+
+  castActionAsRoute(action) {
+    return {
+      title: action.name,
+      index: this.getLastRouteIndex()
+    }
+  }
+
+  getLastRouteIndex() {
+    return this.navStack[ this.navStack.length - 1 ].index || 0
+  }
 
   render() {
     return (
       <Provider store={store}>
         <Navigator
           ref={nav => this.navigator = nav}
-          navigationBar={<NavBar shouldShowNavBar={this.state.shouldShowNavBar}/>}
           initialRouteStack={this.navStack}
           renderScene={route => {
             switch (route.title) {

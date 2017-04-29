@@ -3,6 +3,7 @@ APP_STATE = {
     location: {
         name: #{string}
         params: #{object}
+        lastNav: #{date}
     }
     user: #{object}
     db: {
@@ -22,8 +23,9 @@ export const PossibleRoutes = {
 export function navigateTo(location, params = {}) {
     return {
         type: NAVIGATE,
-        location,
-        params
+        name: location,
+        params,
+        lastNav: +new Date()
     }
 }
 
