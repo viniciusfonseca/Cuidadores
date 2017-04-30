@@ -20,6 +20,10 @@ const style = {
         'flex' : 1
     },
 
+    'blank': {
+        'backgroundColor': '#FFFFFF'
+    },
+
     'login-input': {
         'height' : 40,
         'width' : '85%',
@@ -50,6 +54,25 @@ const style = {
         'borderRadius': 55,
         'borderWidth': 4,
         'borderColor': '#F9F9F9'
+    },
+    'sm': {
+        'height': 44,
+        'width': 44,
+        'borderRadius': 22,
+        'borderWidth': 2,
+    },
+
+    'subheader': {
+        'height': 50,
+        'backgroundColor': '#d8f7d5',
+        'padding': 10,
+        'borderBottomWidth': 1,
+        'borderColor': '#DDDDDD'
+    },
+
+    'form-section': {
+        'borderBottomWidth': 1,
+        'borderColor': '#DDDDDD'
     }
 }
 

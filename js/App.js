@@ -15,6 +15,7 @@ import User              from './Backend/User'
 
 import InitPage          from './Pages/Init'
 import LoginPage         from './Pages/Login'
+import RegisterPage      from './Pages/Register'
 
 let store = configureStore()
 
@@ -35,8 +36,10 @@ class Cuidadores extends React.Component {
       shouldShowNavBar: false
     }
     BackAndroid.addEventListener("hardwareBackPress", () => {
+      console.log("*** LOG: navStack.length - " + this.navStack.length + " ***")
       if (this.navStack.length > 1) {
         this.navigator.pop()
+        this.navStack.pop()
         return true
       }
       return false
@@ -83,15 +86,21 @@ class Cuidadores extends React.Component {
     }
     if (locationPtr.index < 0) {
       this.navigator.popN(-locationPtr.index)
+      for (let i = 0; i < -locationPtr.index; i++) {
+        this.navigator.pop()
+      }
       return
     }
     let nextRoute = this.castActionAsRoute(locationPtr)
     if (locationPtr.params.$replace) {
       console.log("*** LOG NEXT ROUTE ***\n" + JSON.stringify(nextRoute) )
       this.navigator.replace(nextRoute)
+      this.navStack[ this.navStack.length - 1 ] = nextRoute
     }
     else {
+      nextRoute.index++
       this.navigator.push(nextRoute)
+      this.navStack.push(nextRoute)
     }
   }
 
@@ -118,8 +127,11 @@ class Cuidadores extends React.Component {
                 return <InitPage />
               case Actions.PossibleRoutes.LOGIN:
                 return <LoginPage />
+              case Actions.PossibleRoutes.REGISTER:
+                return <RegisterPage />
             }
-          }}/>
+          }}
+          configureScene={(route, routeStack) => Navigator.SceneConfigs.FloatFromBottomAndroid}/>
       </Provider>
     );
   }

@@ -23,7 +23,7 @@ class Init extends React.Component {
     render() {
         return (
             <LinearGradient style={_s("flex flex-stretch center-a center-b")} colors={gradientA}>
-                <ActivityIndicator size="large" />
+                <ActivityIndicator size={70} />
             </LinearGradient>
         )
     }

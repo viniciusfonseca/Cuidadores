@@ -1,5 +1,7 @@
 import React from 'react'
 
+import * as Actions from '../Actions'
+
 import { connect } from 'react-redux'
 
 import {
@@ -13,6 +15,15 @@ import { noop } from '../App'
 class Login extends React.Component {
     constructor(props) {
         super(props)
+    }
+
+    goToRegister() {
+        let action = Actions.navigateTo(Actions.PossibleRoutes.REGISTER)
+        this.props.dispatch(action)
+    }
+
+    authenticateUser() {
+        
     }
 
     render() {
@@ -34,12 +45,12 @@ class Login extends React.Component {
                         </View>
                     </View>
                     <View style={_s("flex-row center-a center-b", {'margin':7})}>
-                        <TouchableHighlight onPress={noop} underlayColor="#48ce48" style={_s("button flex button-a flex-stretch", {'marginRight':10})}>
+                        <TouchableHighlight onPress={this.goToRegister.bind(this)} underlayColor="#48ce48" style={_s("button flex button-a flex-stretch", {'marginRight':10})}>
                                 <View style={_s("flex center-a center-b")}>
                                     <Text>Cadastrar</Text>
                                 </View>
                         </TouchableHighlight>
-                        <TouchableHighlight onPress={noop} underlayColor="#48ce48" style={_s("button flex button-a flex-stretch")}>
+                        <TouchableHighlight onPress={this.authenticateUser.bind(this)} underlayColor="#48ce48" style={_s("button flex button-a flex-stretch")}>
                                 <View style={_s("flex center-a center-b")}>
                                     <Text>Entrar</Text>
                                 </View>
@@ -58,9 +69,7 @@ class Login extends React.Component {
     }
 }
 
-const mapStateToProps = state => ({
-    
-})
+const mapStateToProps = state => ({})
 
 const LoginPage = connect(mapStateToProps)(Login)
 export default LoginPage
