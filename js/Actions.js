@@ -13,12 +13,14 @@ APP_STATE = {
 }
 */
 
-/* -- */
+/* -- location -- */
 export const NAVIGATE = 'NAVIGATE'
 export const PossibleRoutes = {
+    BACK: 'BACK',
     INIT: 'INIT',
     LOGIN: 'LOGIN',
-    REGISTER: 'REGISTER'
+    REGISTER: 'REGISTER',
+    HOME: 'HOME'
 }
 export function navigateTo(location, params = {}) {
     return {
@@ -29,34 +31,20 @@ export function navigateTo(location, params = {}) {
     }
 }
 
-/* -- */
-export const FETCH = 'FETCH'
-export const REQUEST = 'REQUEST'
-export const RECEIVE = 'RECEIVE'
-export function requestData(queryKey, params) {
+/* -- db */
+export const DB_ASSIGN = 'DB_ASSIGN'
+export function assignDB(db) {
     return {
-        type: REQUEST,
-        queryKey, params
-    }
-}
-export function receiveData(rows) {
-    return {
-        type: RECEIVE,
-        rows
-    }
-}
-
-export function fetchData(queryKey, params) {
-    return function(dispatch) {
-        
+        type: DB_ASSIGN,
+        db
     }
 }
 
 /* -- */
-export const USER = 'USER'
+export const USER_UPDATE = 'USER_UPDATE'
 export function updateUserData(fields) {
     return {
-        type: USER,
+        type: USER_UPDATE,
         fields
     }
 }

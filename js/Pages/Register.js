@@ -1,6 +1,7 @@
 import React from 'react'
 
 import * as Actions from '../Actions'
+import { initialState } from '../Reducers'
 
 import { connect } from 'react-redux'
 import update from 'immutability-helper'
@@ -119,17 +120,7 @@ class Register extends React.Component {
         super(props)
         this.state = {
             registering: false,
-            user: {
-                tipo: 0,
-                nome: '',
-                cpf: '',
-                datanasc: '',
-                estado: '',
-                cidade: '',
-                telefone: '',
-                email: '',
-                senha: ''
-            }
+            user: Object.assign({}, initialState.user)
         }
     }
 
@@ -169,8 +160,8 @@ class Register extends React.Component {
         return (
             <View style={_s("flex flex-stretch blank")}>
                 <Spinner visible={this.state.registering} textContent="Cadastrando..." textStyle={{color:'#FFFFFF'}} size={70}/>
-                <NavBar />
-                <SubHeader label="Cadastro" />
+                <NavBar enableBackBtn={true} />
+                <SubHeader label="CADASTRO" />
                 <View style={_s("flex flex-stretch")}>
                     <ScrollView style={{ 'padding': 8 }}>
                         <View style={_s("center-a")}>
@@ -204,6 +195,8 @@ class Register extends React.Component {
     }
 }
 
-const mapStateToProps = state => ({})
+const mapStateToProps = state => ({
+    db: state.db
+})
 const RegisterPage = connect(mapStateToProps)(Register)
 export default RegisterPage

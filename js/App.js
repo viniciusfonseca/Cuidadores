@@ -1,21 +1,22 @@
-import React             from 'react'
+import React               from 'react'
 import {
   AppRegistry, Text, View,
   Alert,       Navigator,
   BackAndroid
-}                        from 'react-native';
+}                          from 'react-native';
 
-import { Provider }      from 'react-redux'
-import configureStore    from './configureStore'
+import { Provider }        from 'react-redux'
+import configureStore      from './configureStore'
 
-import * as Actions      from './Actions'
+import * as Actions        from './Actions'
 
-import Database          from './Backend/Database'
-import User              from './Backend/User'
+import Database            from './Backend/Database'
+import User                from './Backend/User'
 
-import InitPage          from './Pages/Init'
-import LoginPage         from './Pages/Login'
-import RegisterPage      from './Pages/Register'
+import InitPage            from './Pages/Init'
+import LoginPage           from './Pages/Login'
+import RegisterPage        from './Pages/Register'
+import HomePage            from './Pages/Home'
 
 let store = configureStore()
 
@@ -51,9 +52,16 @@ class Cuidadores extends React.Component {
   componentDidMount() {
     this.db = new Database()
     this.user = new User(this.db)
-    this.db.init().then(noop, err => {
-      Alert.alert("Error", err.message)
+    this.db.init()
+
+    let action = Actions.assignDB(this.db)
+    store.dispatch(action)
+
+    action = Actions.updateUserData({
+      userService: this.user
     })
+    store.dispatch(action)
+
     this.storeUnsubscribeFnPtr = store.subscribe( this.onAppStateChange.bind(this) )
   }
 
@@ -84,12 +92,10 @@ class Cuidadores extends React.Component {
     if (!locationPtr.name) {
       return
     }
-    if (locationPtr.index < 0) {
-      this.navigator.popN(-locationPtr.index)
-      for (let i = 0; i < -locationPtr.index; i++) {
+    if (locationPtr.name === Actions.PossibleRoutes.BACK) {
         this.navigator.pop()
-      }
-      return
+        this.navStack.pop()
+        return
     }
     let nextRoute = this.castActionAsRoute(locationPtr)
     if (locationPtr.params.$replace) {
@@ -129,12 +135,19 @@ class Cuidadores extends React.Component {
                 return <LoginPage />
               case Actions.PossibleRoutes.REGISTER:
                 return <RegisterPage />
+              case Actions.PossibleRoutes.HOME:
+                return <HomePage />
             }
           }}
           configureScene={(route, routeStack) => Navigator.SceneConfigs.FloatFromBottomAndroid}/>
       </Provider>
     );
   }
+}
+
+export function navigateBack() {
+  let action = Actions.navigateTo(Actions.PossibleRoutes.BACK)
+  store.dispatch(action)
 }
 
 AppRegistry.registerComponent('Cuidadores', () => Cuidadores);

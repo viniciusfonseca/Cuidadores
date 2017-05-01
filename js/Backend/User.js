@@ -1,4 +1,5 @@
 import { AsyncStorage } from 'react-native'
+import { $timeout } from './Utils'
 
 class UserStorageError extends Error {}
 
@@ -69,12 +70,13 @@ export default class User {
         return await Promise.all(asyncOperations)
     }
 
-    performAuthentication = async(login, pass) => {
+    authenticate = async(login, pass) => {
         let res = null
         try {
             res = await this.db.fetchData('authentication', {
                 email: login, pass
             })
+            await $timeout(2500)
             return !!(res && res.rows && res.rows.length && res.rows[0].R)
         } catch (e) {
             throw e
