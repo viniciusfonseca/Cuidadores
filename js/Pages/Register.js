@@ -57,7 +57,7 @@ const FormField = props => (
                         <DatePicker
                             style={_s("form-section", {'width':'100%'})}
                             mode="date"
-                            date={props.userPtr.datanasc}
+                            date={props.context.state.user.date}
                             placeholder="Selecione a data"
                             format="DD/MM/YYYY"
                             maxDate={new Date()}
@@ -76,7 +76,11 @@ const FormField = props => (
                                     
                                 }
                             }}
-                            onDateChange={props.onChangeText}
+                            ref={props.inputRef}
+                            onDateChange={date => {
+                                props.context.state.user.date = value
+                                context.forceUpdate()
+                            }}
                         />
                     )
                 case 'masked':
@@ -93,12 +97,12 @@ const FormField = props => (
                     return (
                         <TextInput accessibilityLabel={props.label} underlineColorAndroid="transparent"
                             style={_s("form-section", { 'padding': 0, 'marginBottom': props.last ? 8 : 0 })}
-                            onChangeText={props.onChangeText}
+                            onChangeText={props.onChangeText || noop}
                             returnKeyType="next"
                             onKeyPress={props.onKeyPress || noop}
                             secureTextEntry={props.password} 
                             ref={props.inputRef}
-                            autoCapitalize="sentences" />
+                            autoCapitalize={props.shouldNotCapitalize? "none": "sentences"} />
                     )
             }
         })()}
@@ -114,7 +118,7 @@ const Button = props => (
 )
 
 class Register extends React.Component {
-    inputStack = []
+    inputHash = {}
 
     constructor(props) {
         super(props)
@@ -131,8 +135,8 @@ class Register extends React.Component {
         ]
     }
 
-    storeInput(ref) {
-        this.inputStack.push(ref)
+    storeInput(field) {
+        return ref => this.inputHash[field] = ref
     }
 
     handleNext() {
@@ -140,27 +144,23 @@ class Register extends React.Component {
     }
 
     registerUser() {
+        Object.keys(this.inputHash).forEach(field => {
+            if (field == 'datanasc') {
+                Alert.alert('inputDate', this.inputHash.datanasc.state.date + "")
+            }
+        })
         this.setState({ registering: true })
         setTimeout(() => {
             this.setState({ registering: false })
-            Alert.alert("Usuario", JSON.stringify(this.state.user))
             ToastAndroid.show("Cadastro realizado com sucesso", ToastAndroid.SHORT)
         }, 3000)
-    }
-
-    generateInputHandler(field) {
-        return value => this.setState({
-            user: Object.assign(this.state.user, {
-                [field]: value
-            })
-        })
     }
 
     render() {
         return (
             <View style={_s("flex flex-stretch blank")}>
                 <Spinner visible={this.state.registering} textContent="Cadastrando..." textStyle={{color:'#FFFFFF'}} size={70}/>
-                <NavBar enableBackBtn={true} />
+                <NavBar enableBackBtn={true} navigation={this.props.navigation} />
                 <SubHeader label="CADASTRO" />
                 <View style={_s("flex flex-stretch")}>
                     <ScrollView style={{ 'padding': 8 }}>
@@ -172,21 +172,20 @@ class Register extends React.Component {
                                 initial={0}
                                 buttonSize={15}
                                 buttonOuterSize={30}
-                                onPress={value => this.generateInputHandler.call(this, 'tipo')}
                                 buttonColor="#000000"
                             />
                         </View>
                         <FormSection label="DADOS PESSOAIS" />
-                        <FormField onChangeText={this.generateInputHandler.call(this, 'nome')} inputRef={this.storeInput.bind(this)} label="Nome" />
-                        <FormField onChangeText={this.generateInputHandler.call(this, 'cpf')} inputRef={this.storeInput.bind(this)} label="CPF" type="masked" maskType="cpf" />
-                        <FormField onChangeText={this.generateInputHandler.call(this, 'datanasc')} inputRef={this.storeInput.bind(this)} label="Data de nascimento" type="date" userPtr={this.state.user} />
-                        <FormField onChangeText={this.generateInputHandler.call(this, 'estado')} inputRef={this.storeInput.bind(this)} label="Estado" />
-                        <FormField onChangeText={this.generateInputHandler.call(this, 'cidade')} inputRef={this.storeInput.bind(this)} label="Cidade" />
-                        <FormField onChangeText={this.generateInputHandler.call(this, 'telefone')} inputRef={this.storeInput.bind(this)} label="Telefone" type="masked" maskType="cel-phone" last={true} />
+                        <FormField inputRef={this.storeInput.call(this, "nome")} label="Nome" />
+                        <FormField inputRef={this.storeInput.call(this, "cpf")} label="CPF" type="masked" maskType="cpf" />
+                        <FormField inputRef={this.storeInput.call(this, "datanasc")} label="Data de nascimento" type="date" onChangeText={value => this.setState(Object.assign(this.state.user, {date:value}))} userPtr={this.state.user} />
+                        <FormField inputRef={this.storeInput.call(this, "estado")} label="Estado" />
+                        <FormField inputRef={this.storeInput.call(this, "cidade")} label="Cidade" />
+                        <FormField inputRef={this.storeInput.call(this, "telefone")} label="Telefone" type="masked" maskType="cel-phone" value={this.state.user.telefone} last={true} />
                         <FormSection label="DADOS DE AUTENTICAÇÃO" />
-                        <FormField onChangeText={this.generateInputHandler.call(this, 'email')} inputRef={this.storeInput.bind(this)} label="Email" shouldNotCapitalize={true} />
-                        <FormField onChangeText={this.generateInputHandler.call(this, 'senha')} inputRef={this.storeInput.bind(this)} label="Senha" password={true} shouldNotCapitalize={true} />
-                        <FormField inputRef={this.storeInput.bind(this)} label="Digite sua senha novamente" password={true} last={true} shouldNotCapitalize={true} />
+                        <FormField inputRef={this.storeInput.call(this, "email")} label="Email" shouldNotCapitalize={true} />
+                        <FormField inputRef={this.storeInput.call(this, "senha")} label="Senha" password={true} shouldNotCapitalize={true} />
+                        <FormField inputRef={this.storeInput.call(this, "vSenha")} label="Digite sua senha novamente" password={true} last={true} shouldNotCapitalize={true} />
                         <Button onPress={this.registerUser.bind(this)} label="CADASTRAR" />
                     </ScrollView>
                 </View>

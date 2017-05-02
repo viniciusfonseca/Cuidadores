@@ -12,7 +12,7 @@ import LinearGradient from 'react-native-linear-gradient'
 import Icon from 'react-native-vector-icons/Entypo'
 
 import _s, { gradientA } from '../Style'
-import { noop } from '../App'
+import { noop, navigateTo, replaceState } from '../App'
 
 import ImprovedTouchable from '../Components/ImprovedTouchable'
 import Spinner from '../Components/Spinner'
@@ -22,13 +22,14 @@ class Login extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
-            auth: false
+            auth:  false,
+            login: "",
+            pass:  ""
         }
     }
     
     goToRegister() {
-        let action = Actions.navigateTo(Actions.PossibleRoutes.REGISTER)
-        this.props.dispatch(action)
+        navigateTo(this.props, Actions.PossibleRoutes.REGISTER)
     }
 
     authenticateUser = async() => {
@@ -46,8 +47,7 @@ class Login extends React.Component {
             let isAuth = await userService.authenticate(login, pass)
             this.setState({ auth: false })
             if (isAuth) {
-                let action = Actions.navigateTo(Actions.PossibleRoutes.HOME, { $replace: true })
-                this.props.dispatch(action)
+                replaceState(this.props, Actions.PossibleRoutes.HOME)
             }
             else {
                 ToastAndroid.show("Usuario e/ou senha inválida", ToastAndroid.SHORT)

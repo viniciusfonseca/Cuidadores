@@ -15,7 +15,7 @@ const NavBar = props => (
   })} colors={gradientC}>
     <View style={_s("flex")}>
       {props.enableBackBtn && (
-      <TouchableOpacity onPress={navigateBack}
+      <TouchableOpacity onPress={navigateBack(props)}
         style={{'width':50}}>
         <Icon name="chevron-left" color="#555" style={{'fontSize':44}} />
       </TouchableOpacity>)}

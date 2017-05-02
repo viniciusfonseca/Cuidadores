@@ -4,6 +4,7 @@ import {
     View, ActivityIndicator
 } from 'react-native'
 import _s, { gradientA } from '../Style'
+import { replaceState } from '../App'
 
 import * as Actions from '../Actions'
 import { connect } from 'react-redux'
@@ -13,10 +14,7 @@ import LinearGradient from 'react-native-linear-gradient'
 class Init extends React.Component {
     componentDidMount() {
         setTimeout(() => {
-            let action = Actions.navigateTo(Actions.PossibleRoutes.LOGIN, {
-                $replace: true
-            })
-            this.props.dispatch(action)
+            replaceState(this.props, Actions.PossibleRoutes.LOGIN)
         }, 3000)
     }
 

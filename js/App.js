@@ -1,9 +1,12 @@
 import React               from 'react'
 import {
   AppRegistry, Text, View,
-  Alert,       Navigator,
-  BackAndroid
-}                          from 'react-native';
+  Alert, BackAndroid
+}                          from 'react-native'
+import {
+  StackNavigator,
+  NavigationActions
+}                          from 'react-navigation'
 
 import { Provider }        from 'react-redux'
 import configureStore      from './configureStore'
@@ -17,6 +20,24 @@ import InitPage            from './Pages/Init'
 import LoginPage           from './Pages/Login'
 import RegisterPage        from './Pages/Register'
 import HomePage            from './Pages/Home'
+
+const Navigator = StackNavigator({
+  [Actions.PossibleRoutes.INIT]: {
+    screen: InitPage
+  },
+  [Actions.PossibleRoutes.LOGIN]: {
+    screen: LoginPage
+  },
+  [Actions.PossibleRoutes.REGISTER]: {
+    screen: RegisterPage
+  },
+  [Actions.PossibleRoutes.HOME]: {
+    screen: HomePage
+  }
+}, {
+  initialRouteName: Actions.PossibleRoutes.INIT,
+  headerMode: 'none'
+})
 
 let store = configureStore()
 
@@ -36,15 +57,15 @@ class Cuidadores extends React.Component {
     this.state = {
       shouldShowNavBar: false
     }
-    BackAndroid.addEventListener("hardwareBackPress", () => {
-      console.log("*** LOG: navStack.length - " + this.navStack.length + " ***")
-      if (this.navStack.length > 1) {
-        this.navigator.pop()
-        this.navStack.pop()
-        return true
-      }
-      return false
-    })
+    // BackAndroid.addEventListener("hardwareBackPress", () => {
+    //   console.log("*** LOG: navStack.length - " + this.navStack.length + " ***")
+    //   if (this.navStack.length > 1) {
+    //     this.navigator.pop()
+    //     this.navStack.pop()
+    //     return true
+    //   }
+    //   return false
+    // })
   }
 
   storeUnsubscribeFnPtr = null
@@ -72,53 +93,7 @@ class Cuidadores extends React.Component {
   }
 
   onAppStateChange() {
-    let nextState = store.getState()
-    if (this.state.shouldShowNavBar !== nextState.shouldShowNavBar) {
-      this.setState({
-        shouldShowNavBar: nextState.shouldShowNavBar
-      })
-    }
-    console.log("*** LOG: WILL VERIFY NEXTSTATE LOCATION ***")
-    console.log( JSON.stringify(nextState) )
-    console.log("*** ***")
-    if (nextState.location && this.lastNav !== nextState.location.lastNav) {
-      this.lastNav = nextState.location.lastNav
-      this.handleNavigation(nextState.location)
-    }
-  }
-
-  handleNavigation(locationPtr) {
-    console.log("*** LOG: CALL HANDLE NAVIGATION")
-    if (!locationPtr.name) {
-      return
-    }
-    if (locationPtr.name === Actions.PossibleRoutes.BACK) {
-        this.navigator.pop()
-        this.navStack.pop()
-        return
-    }
-    let nextRoute = this.castActionAsRoute(locationPtr)
-    if (locationPtr.params.$replace) {
-      console.log("*** LOG NEXT ROUTE ***\n" + JSON.stringify(nextRoute) )
-      this.navigator.replace(nextRoute)
-      this.navStack[ this.navStack.length - 1 ] = nextRoute
-    }
-    else {
-      nextRoute.index++
-      this.navigator.push(nextRoute)
-      this.navStack.push(nextRoute)
-    }
-  }
-
-  castActionAsRoute(action) {
-    return {
-      title: action.name,
-      index: this.getLastRouteIndex()
-    }
-  }
-
-  getLastRouteIndex() {
-    return this.navStack[ this.navStack.length - 1 ].index || 0
+    
   }
 
   render() {
@@ -126,28 +101,33 @@ class Cuidadores extends React.Component {
       <Provider store={store}>
         <Navigator
           ref={nav => this.navigator = nav}
-          initialRouteStack={this.navStack}
-          renderScene={route => {
-            switch (route.title) {
-              case Actions.PossibleRoutes.INIT:
-                return <InitPage />
-              case Actions.PossibleRoutes.LOGIN:
-                return <LoginPage />
-              case Actions.PossibleRoutes.REGISTER:
-                return <RegisterPage />
-              case Actions.PossibleRoutes.HOME:
-                return <HomePage />
-            }
-          }}
-          configureScene={(route, routeStack) => Navigator.SceneConfigs.FloatFromBottomAndroid}/>
+        />
       </Provider>
     );
   }
 }
 
-export function navigateBack() {
-  let action = Actions.navigateTo(Actions.PossibleRoutes.BACK)
-  store.dispatch(action)
+export const navigateBack = props => () => {
+  let action = NavigationActions.back()
+  props.navigation.dispatch(action)
+}
+
+export const replaceState = (props, routeName) => {
+  let action = NavigationActions.reset({
+    index: 0,
+    actions: [
+      NavigationActions.navigate({ routeName })
+    ]
+  })
+  props.navigation.dispatch(action)
+}
+
+export const navigateTo = (props, stateName, params = {}) => {
+  let action = NavigationActions.navigate({
+    routeName: stateName,
+    params
+  })
+  props.navigation.dispatch(action)
 }
 
 AppRegistry.registerComponent('Cuidadores', () => Cuidadores);

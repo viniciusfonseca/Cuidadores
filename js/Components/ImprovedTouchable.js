@@ -5,8 +5,8 @@ import { TouchableOpacity } from 'react-native'
 export default class ImprovedTouchable extends React.Component {
     flagTouch = false
     handleTouch(phase) {
-        this.b.setOpacityTo(1,150)
-        setTimeout(this.props.onPress)
+        this.b.setOpacityTo(1,0)
+        requestAnimationFrame(this.props.onPress)
     }
     render() {
         return (
