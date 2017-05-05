@@ -15,7 +15,7 @@ class Init extends React.Component {
     componentDidMount() {
         setTimeout(() => {
             replaceState(this.props, Actions.PossibleRoutes.LOGIN)
-        }, 3000)
+        }, 1500)
     }
 
     render() {

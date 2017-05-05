@@ -6,11 +6,11 @@ import { initialState } from '../Reducers'
 import { connect } from 'react-redux'
 import update from 'immutability-helper'
 
-import {
+import ReactNative, {
     View, Text, TextInput, 
     TouchableHighlight, 
     Alert, Image, ScrollView, 
-    ToastAndroid
+    ToastAndroid, Keyboard
 } from 'react-native'
 import LinearGradient from 'react-native-linear-gradient'
 
@@ -20,6 +20,7 @@ import { noop } from '../App'
 import NavBar from '../Components/NavBar'
 import SubHeader from '../Components/SubHeader'
 import Spinner from '../Components/Spinner'
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
 
 import RadioForm, {
     RadioButton,
@@ -44,6 +45,10 @@ const maskPlaceholders = {
 const maskMaxLength = {
     'cel-phone': 15,
     'cpf': 14
+}
+
+function isMasked(field) {
+    return (field == 'cpf' || field == 'telefone')
 }
 
 const FormField = props => (
@@ -78,8 +83,8 @@ const FormField = props => (
                             }}
                             ref={props.inputRef}
                             onDateChange={date => {
-                                props.context.state.user.date = value
-                                context.forceUpdate()
+                                props.context.state.user.date = date
+                                props.context.forceUpdate()
                             }}
                         />
                     )
@@ -87,10 +92,13 @@ const FormField = props => (
                     return (
                         <TextInputMask type={props.maskType} underlineColorAndroid="transparent" maxLength={ maskMaxLength[props.maskType] }
                             placeholder={ maskPlaceholders[props.maskType] }
+                            blurOnSubmit={!!props.shouldBlur}
+                            onSubmitEditing={props.handleSubmit}
                             placeholderTextColor="#CCCCCC"
                             style={_s("form-section", { 'padding': 0, 'marginBottom': props.last ? 8 : 0 })} 
-                            onKeyPress={props.onKeyPress || noop}
-                            ref={props.inputRef} />
+                            ref={props.inputRef}
+                            onFocus={props.onFocus}
+                        />
                     )
                 case 'text':
                 default:
@@ -98,10 +106,13 @@ const FormField = props => (
                         <TextInput accessibilityLabel={props.label} underlineColorAndroid="transparent"
                             style={_s("form-section", { 'padding': 0, 'marginBottom': props.last ? 8 : 0 })}
                             onChangeText={props.onChangeText || noop}
+                            keyboardType="ascii-capable"
                             returnKeyType="next"
-                            onKeyPress={props.onKeyPress || noop}
-                            secureTextEntry={props.password} 
+                            secureTextEntry={props.password}
                             ref={props.inputRef}
+                            blurOnSubmit={!!props.shouldBlur}
+                            onSubmitEditing={props.handleSubmit}
+                            onFocus={props.onFocus}
                             autoCapitalize={props.shouldNotCapitalize? "none": "sentences"} />
                     )
             }
@@ -135,12 +146,73 @@ class Register extends React.Component {
         ]
     }
 
-    storeInput(field) {
+    componentWillMount () {
+        this.keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', this._keyboardDidShow);
+        this.keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', this._keyboardDidHide);
+    }
+
+    componentWillUnmount () {
+        this.keyboardDidShowListener.remove();
+        this.keyboardDidHideListener.remove();
+    }
+
+    _keyboardDidShow () {
+        this.keyboardIsShown = true
+    }
+
+    _keyboardDidHide () {
+        this.keyboardIsShown = false
+    }
+
+    sInput(field) {
         return ref => this.inputHash[field] = ref
     }
 
-    handleNext() {
+    getNextField(field) {
+        let flagF = false
+        let nextF = null
+        Object.keys(this.inputHash).some(sField => {
+            if (flagF) {
+                nextF = sField
+                return true
+            }
+            flagF = field == sField
+        })
+        return nextF ? [this.inputHash[nextF], nextF] : [null, null]
+    }
 
+    handleNext(field) {
+        return () => {
+            let [nextEl, nextF] = this.getNextField(field)
+            if (nextEl) {
+                if (isMasked(nextF)) {
+                    nextEl.getElement().focus()
+                }
+                else {
+                    nextEl.focus()
+                }
+            }
+        }
+    }
+
+    handleFocus(field) {
+        return () => setTimeout(() => {
+            let scrollResponder = this.refs.scrollView.getScrollResponder();
+            scrollResponder.scrollResponderScrollNativeHandleToKeyboard(
+                ReactNative.findNodeHandle(this.inputHash[field]),
+                140,
+                true
+            );
+        }, 50);
+    }
+
+    _scrollToInput (nativeElement) {
+        setTimeout(() => {
+            nativeElement.measure((x, y, w, h, px, py) => {
+                Alert.alert('py',py.toString())
+                this.refs.scrollView.scrollTo(py)
+            })
+        }, 0)
     }
 
     registerUser() {
@@ -163,29 +235,29 @@ class Register extends React.Component {
                 <NavBar enableBackBtn={true} navigation={this.props.navigation} />
                 <SubHeader label="CADASTRO" />
                 <View style={_s("flex flex-stretch")}>
-                    <ScrollView style={{ 'padding': 8 }}>
-                        <View style={_s("center-a")}>
-                            <RadioForm style={_s("flex-stretch")}
+                    <ScrollView style={{ 'padding': 8 }} ref="scrollView">
+                        <View>
+                            <RadioForm
                                 radio_props={Register.INPUT_CONFIG}
-                                formHorizontal={false}
                                 animation={false}
                                 initial={0}
                                 buttonSize={15}
                                 buttonOuterSize={30}
                                 buttonColor="#000000"
+                                onPress={value => {this.state.user.tipo = value;this.forceUpdate()}}
                             />
                         </View>
                         <FormSection label="DADOS PESSOAIS" />
-                        <FormField inputRef={this.storeInput.call(this, "nome")} label="Nome" />
-                        <FormField inputRef={this.storeInput.call(this, "cpf")} label="CPF" type="masked" maskType="cpf" />
-                        <FormField inputRef={this.storeInput.call(this, "datanasc")} label="Data de nascimento" type="date" onChangeText={value => this.setState(Object.assign(this.state.user, {date:value}))} userPtr={this.state.user} />
-                        <FormField inputRef={this.storeInput.call(this, "estado")} label="Estado" />
-                        <FormField inputRef={this.storeInput.call(this, "cidade")} label="Cidade" />
-                        <FormField inputRef={this.storeInput.call(this, "telefone")} label="Telefone" type="masked" maskType="cel-phone" value={this.state.user.telefone} last={true} />
+                        <FormField inputRef={this.sInput.call(this, "nome")} label="Nome" onFocus={this.handleFocus.call(this, "nome")} handleSubmit={this.handleNext.call(this,"nome")} />
+                        <FormField inputRef={this.sInput.call(this, "cpf")} label="CPF" type="masked" maskType="cpf" shouldBlur={true} onFocus={this.handleFocus.call(this,"cpf")} />
+                        <FormField label="Data de nascimento" type="date" context={this} />
+                        <FormField inputRef={this.sInput.call(this, "estado")} label="Estado" onFocus={this.handleFocus.call(this,"estado")} handleSubmit={this.handleNext.call(this,"estado")} />
+                        <FormField inputRef={this.sInput.call(this, "cidade")} label="Cidade" onFocus={this.handleFocus.call(this,"cidade")} handleSubmit={this.handleNext.call(this,"cidade")} />
+                        <FormField inputRef={this.sInput.call(this, "telefone")} label="Telefone" type="masked" maskType="cel-phone" value={this.state.user.telefone} last={true} onFocus={this.handleFocus.call(this,"telefone")} handleSubmit={this.handleNext.call(this,"telefone")} />
                         <FormSection label="DADOS DE AUTENTICAÇÃO" />
-                        <FormField inputRef={this.storeInput.call(this, "email")} label="Email" shouldNotCapitalize={true} />
-                        <FormField inputRef={this.storeInput.call(this, "senha")} label="Senha" password={true} shouldNotCapitalize={true} />
-                        <FormField inputRef={this.storeInput.call(this, "vSenha")} label="Digite sua senha novamente" password={true} last={true} shouldNotCapitalize={true} />
+                        <FormField inputRef={this.sInput.call(this, "email")} label="Email" shouldNotCapitalize={true} onFocus={this.handleFocus.call(this,"email")} handleSubmit={this.handleNext.call(this,"email")} />
+                        <FormField inputRef={this.sInput.call(this, "senha")} label="Senha" password={true} shouldNotCapitalize={true} onFocus={this.handleFocus.call(this,"senha")} handleSubmit={this.handleNext.call(this,"senha")} />
+                        <FormField inputRef={this.sInput.call(this, "vSenha")} label="Digite sua senha novamente" password={true} last={true} shouldNotCapitalize={true} shouldBlur={true} onFocus={this.handleFocus.call(this,"vSenha")} />
                         <Button onPress={this.registerUser.bind(this)} label="CADASTRAR" />
                     </ScrollView>
                 </View>

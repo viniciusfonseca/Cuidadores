@@ -45,11 +45,6 @@ export function noop() {}
 
 class Cuidadores extends React.Component {
   db = null
-  navStack = [{
-    index: 0,
-    title: Actions.PossibleRoutes.INIT
-  }]
-  lastNav = 0
   navigator = null
 
   constructor(props) {
