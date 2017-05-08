@@ -73,7 +73,7 @@ const style = {
     'form-section': {
         'borderBottomWidth': 1,
         'borderColor': '#DDDDDD'
-    }
+    },
 }
 
 export const gradientA = ['#FFFFFF','#74FD71']

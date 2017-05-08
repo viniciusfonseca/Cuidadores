@@ -6,7 +6,7 @@ export default class ImprovedTouchable extends React.Component {
     flagTouch = false
     handleTouch(phase) {
         this.b.setOpacityTo(1,0)
-        requestAnimationFrame(this.props.onPress)
+        setTimeout(this.props.onPress)
     }
     render() {
         return (

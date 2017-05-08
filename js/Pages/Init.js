@@ -15,12 +15,13 @@ class Init extends React.Component {
     componentDidMount() {
         setTimeout(() => {
             replaceState(this.props, Actions.PossibleRoutes.LOGIN)
-        }, 1500)
+        }, 700)
     }
 
     render() {
         return (
-            <LinearGradient style={_s("flex flex-stretch center-a center-b")} colors={gradientA}>
+            <LinearGradient style={_s("flex flex-stretch center-a center-b")} colors={gradientA}
+                onLayout={e=>1}>
                 <ActivityIndicator size={70} />
             </LinearGradient>
         )

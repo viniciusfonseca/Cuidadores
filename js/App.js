@@ -31,7 +31,7 @@ const Navigator = StackNavigator({
   [Actions.PossibleRoutes.REGISTER]: {
     screen: RegisterPage
   },
-  [Actions.PossibleRoutes.HOME]: {
+  [Actions.PossibleRoutes.HOME_]: {
     screen: HomePage
   }
 }, {
@@ -102,7 +102,7 @@ class Cuidadores extends React.Component {
   }
 }
 
-export const navigateBack = props => () => {
+export const navigateBack = (props) => {
   let action = NavigationActions.back()
   props.navigation.dispatch(action)
 }
@@ -123,6 +123,14 @@ export const navigateTo = (props, stateName, params = {}) => {
     params
   })
   props.navigation.dispatch(action)
+}
+
+export const openDrawer = props => {
+  props.navigation.navigate('DrawerOpen')
+}
+
+export const closeDrawer = props => {
+  props.navigation.navigate('DrawerClose')
 }
 
 AppRegistry.registerComponent('Cuidadores', () => Cuidadores);

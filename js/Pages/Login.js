@@ -6,7 +6,7 @@ import { connect } from 'react-redux'
 
 import {
     View, Text, TextInput, Alert, Image,
-    ToastAndroid
+    ToastAndroid, Dimensions
 } from 'react-native'
 import LinearGradient from 'react-native-linear-gradient'
 import Icon from 'react-native-vector-icons/Entypo'
@@ -21,10 +21,12 @@ class Login extends React.Component {
 
     constructor(props) {
         super(props)
+        let dims = Dimensions.get("window")
         this.state = {
             auth:  false,
             login: "",
-            pass:  ""
+            pass:  "",
+            shouldShowCross: dims.height >= 400
         }
     }
     
@@ -47,44 +49,59 @@ class Login extends React.Component {
             let isAuth = await userService.authenticate(login, pass)
             this.setState({ auth: false })
             if (isAuth) {
-                replaceState(this.props, Actions.PossibleRoutes.HOME)
+                replaceState(this.props, Actions.PossibleRoutes.HOME_)
             }
             else {
                 ToastAndroid.show("Usuario e/ou senha inválida", ToastAndroid.SHORT)
             }
         } catch(e) {
+            Alert.alert("erro", e.message)
             ToastAndroid.show("Ocorreu um erro durante a autenticação", ToastAndroid.SHORT)
+        }
+    }
+
+    onLayout = event => {
+        let shouldShowCross = event.nativeEvent.layout.height >= 400
+        if (shouldShowCross != this.state.shouldShowCross) {
+            this.setState({ shouldShowCross })
         }
     }
 
     render() {
         return (
-            <LinearGradient style={_s("flex flex-stretch center-a center-b")} colors={gradientA}>
+            <LinearGradient style={_s("flex flex-stretch center-a center-b")} colors={gradientA}
+                onLayout={this.onLayout.bind(this)}>
                 <Spinner visible={this.state.auth} 
                     textContent="Autenticando..." 
                     textStyle={{color:'#FFFFFF'}} size={70} />
                 <View style={_s("flex end-a center-b")}>
-                    <View style={_s("center-b logo-circle")}>
+                    <View style={_s("center-b logo-circle", {
+                        'height':this.state.shouldShowCross?110:0,
+                        'borderWidth':this.state.shouldShowCross?4:0})}>
                         <Image style={_s("flex")} resizeMode="contain" source={require('../img/cross.png')}/>
                     </View>
                     <Text style={{'fontSize':36,'fontFamily':'Pacifico'}}>Cuidadores</Text>
                 </View>
-                <View style={_s("flex")}>
+                <View style={{'flex':this.state.shouldShowCross?1:3}}>
                     <View style={_s("center-a center-b")}>
                         <View style={_s("login-input center-a center-b flex-row")}>
                             <Icon name="user" style={{'marginLeft':5, 'fontSize':16}} />
                             <TextInput style={_s("flex")}
                                 onChangeText={value => this.setState({ login: value })} 
                                 placeholder="Login" keyboardType="email-address" 
-                                underlineColorAndroid="transparent" />
+                                underlineColorAndroid="transparent"
+                                blurOnSubmit={false}
+                                onSubmitEditing={() => this.refs.pwd.focus()} />
                         </View>
                         <View style={_s("login-input center-a center-b flex-row")}>
                             <Icon name="key" style={{'marginLeft':5, 'fontSize':16}} />
                             <TextInput style={_s("flex")}
+                                ref="pwd"
                                 onChangeText={value => this.setState({ pass: value })}
                                 placeholder="Senha" keyboardType="ascii-capable" 
                                 secureTextEntry={true}
-                                underlineColorAndroid="transparent" />
+                                underlineColorAndroid="transparent"
+                                onSubmitEditing={this.authenticateUser.bind(this)} />
                         </View>
                     </View>
                     <View style={_s("flex-row center-a center-b", {'margin':7})}>
@@ -114,7 +131,7 @@ class Login extends React.Component {
 
 const mapStateToProps = state => ({
     db: state.db,
-    user: state.user
+    user: state.user,
 })
 
 const LoginPage = connect(mapStateToProps)(Login)

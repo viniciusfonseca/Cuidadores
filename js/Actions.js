@@ -20,7 +20,11 @@ export const PossibleRoutes = {
     INIT: 'INIT',
     LOGIN: 'LOGIN',
     REGISTER: 'REGISTER',
-    HOME: 'HOME'
+    HOME_: 'HOME',
+    HOME: {
+        SEARCH: 'HOME.SEARCH',
+        PROFILE: 'HOME.PROFILE'
+    }
 }
 export function navigateTo(location, params = {}) {
     return {

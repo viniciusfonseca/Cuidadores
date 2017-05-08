@@ -6,6 +6,8 @@ SQLite.enablePromise(true)
 
 import { Alert } from 'react-native'
 
+const isUndefined = any => typeof any === 'undefined'
+
 export class DatabaseResult {
     static get STATUS() {
         return {
@@ -52,15 +54,18 @@ export default class Database {
         }
         q = q.replace(/<\w+>/g, sub => {
             sub = sub.replace(/^<|>$/g, '')
+            if (!preset.filters) {
+                return params[sub]
+            }
             let filterCfg = preset.filters.find(filter => filter.name === sub)
             if (!filterCfg) {
-                return '1'
+                return params[sub]
             }
             let negateFlag = false
             if (filterCfg.flags) {
                 negateFlag = filterCfg.flags.includes("negate")
             }
-            if (!(sub in params)) {
+            if (!(sub in params) || isUndefined(params[sub])) {
                 return !negateFlag ? '1' : '0'
             }
             return filterCfg.SQL.replace(/<\?>/g, params[sub] || "")
