@@ -1,12 +1,16 @@
-// @flow
-import { presets } from './QueryPresets'
+import presets from './QueryPresets'
 
 import SQLite from 'react-native-sqlite-storage'
-SQLite.enablePromise(true)
+import Q from 'q'
 
 import { Alert } from 'react-native'
 
+import { noop } from '../App'
+
 const isUndefined = any => typeof any === 'undefined'
+
+SQLite.DEBUG(true)
+SQLite.enablePromise(true)
 
 export class DatabaseResult {
     static get STATUS() {
@@ -34,11 +38,12 @@ export default class Database {
     _dbPtr = null
 
     init = async() => {
-        let dbPtr = null
+        let res = null
         try {
             dbPtr = await SQLite.openDatabase(Database.DB_OPEN_OPTIONS)
             this._dbPtr = dbPtr
-        } catch(e) {
+        }
+        catch (e) {
             throw e
         }
     }
@@ -65,21 +70,22 @@ export default class Database {
             if (filterCfg.flags) {
                 negateFlag = filterCfg.flags.includes("negate")
             }
-            if (!(sub in params) || isUndefined(params[sub])) {
+            if (isUndefined(params[sub]) || !(sub in params)) {
                 return !negateFlag ? '1' : '0'
             }
             return filterCfg.SQL.replace(/<\?>/g, params[sub] || "")
         })
         try {
-            let qResult = (await this._dbPtr.executeSql(q)).pop()
+            let [qResult] = await this._dbPtr.executeSql(q)
             let rows = []
             for (let i = 0; i < qResult.rows.length; i++) {
                 rows.push(qResult.rows.item(i))
             }
             return new DatabaseResult(DatabaseResult.STATUS.OK, rows)
-        } catch(e) {
+        }
+        catch (e) {
             Alert.alert("ERR", e.message)
-            throw new DatabaseResult(DatabaseResult.STATUS.QUERY_ERROR)
-        }   
+            throw new DatabaseResult(DatabaseResult.STATUS.QUERY_ERROR, e)
+        }
     }
 }

@@ -1,5 +1,6 @@
 import { AsyncStorage } from 'react-native'
 import { $timeout } from './Utils'
+import Q from 'q'
 
 class UserStorageError extends Error {}
 
@@ -36,20 +37,19 @@ export default class User {
 
     constructor(db) { this.db = db }
 
-    init = async() => {
-        try {
-            let id = await AsyncStorage.getItem('id')
+    init = () => Q.promise((resolve, reject) => {
+        AsyncStorage.getItem('id').then(id => {
             if (id !== null) {
                 this._status = User.STATUS.INITIATED_FILLED
             }
             else {
                 this._status = User.STATUS.INITIATED_NULL
             }
-        } catch(e) {
+        }).catch(e => {
             this._status = User.INIT_ERROR
             throw new UserStorageError("Error initializing user structure.")
-        }
-    }
+        })
+    })
 
     load = async() => {
         let userPtr = {}
@@ -74,11 +74,12 @@ export default class User {
         let res = null
         try {
             res = await this.db.fetchData('authentication', {
-                email: login, pass
+                email: login,
+                pass
             })
-            await $timeout(2500)
             return !!(res && res.rows && res.rows.length && res.rows[0].R)
-        } catch (e) {
+        }
+        catch (e) {
             throw e
         }
     }

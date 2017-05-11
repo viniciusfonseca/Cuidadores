@@ -1,4 +1,4 @@
-export const presets = [
+let presets = [
     {
         "id": "user_exists",
         "base": `SELECT EXISTS(
@@ -8,8 +8,32 @@ export const presets = [
     },
     {
         "id": "create_user",
-        "base": `INSERT INTO USUARIO (Email, Senha)
-                    VALUES(ROWID, '<email>', '<pass>')`
+        "base": `INSERT INTO USUARIO (
+                    Email, 
+                    Senha, 
+                    CPF, 
+                    Telefone, 
+                    Nome, 
+                    DataNascimento, 
+                    Estado, 
+                    Cidade, 
+                    Tipo
+                )
+                VALUES (
+                    '<email>', 
+                    '<pass>', 
+                    '<cpf>', 
+                    '<telefone>', 
+                    '<nome>',
+                    '<datanasc>',
+                    '<estado>',
+                    '<cidade>',
+                    '<tipo>'
+                )`
+    },
+    {
+        "id": "retrieve_user",
+        "base": `SELECT * FROM USUARIO WHERE USUARIO.Email = <email>`
     },
     {
         "id": "create_person",
@@ -36,19 +60,23 @@ export const presets = [
     },
     {
         id: "cuidadores",
-        base: `SELECT CUIDADOR.Nome, 
+        base: `SELECT CUIDADOR.CodigoUsuario,
+                      CUIDADOR.Nome,
+                      CUIDADOR.Telefone,
                 GROUP_CONCAT(
-                    SELECT ESPECIALIDADE.Nome 
+                    (SELECT ESPECIALIDADE.DescricaoEspecialidade 
                     FROM ESPECIALIDADE
                     INNER JOIN CUIDADOR_ESPECIALIDADE
                     ON CUIDADOR_ESPECIALIDADE.CodigoEspecialidade = ESPECIALIDADE.CodigoEspecialidade
                     INNER JOIN CUIDADOR
-                    ON CUIDADOR.CodigoCuidador = CUIDADOR_ESPECIALIDADE.CodigoCuidador
-                ,' ,') AS Especialidades FROM CUIDADOR`,
+                    ON CUIDADOR.CodigoUsuario = CUIDADOR_ESPECIALIDADE.CodigoUsuario)
+                ,' ,') AS Especialidades 
+                FROM CUIDADOR
+                WHERE <especialidade>`,
         filters: [
             {
                 "name": "especialidade",
-                "SQL": ""
+                "SQL": "1"
             }
         ]
     },
@@ -66,3 +94,4 @@ export const presets = [
         base: `SELECT * FROM ESPECIALIDADE`
     }
 ]
+export default presets

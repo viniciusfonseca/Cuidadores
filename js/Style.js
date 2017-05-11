@@ -26,7 +26,7 @@ const style = {
 
     'login-input': {
         'height' : 40,
-        'width' : '85%',
+        'width' : '100%',
         'backgroundColor': '#FFFFFF',
         'borderRadius': 30,
         'margin': 7,

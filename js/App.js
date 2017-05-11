@@ -1,7 +1,7 @@
 import React               from 'react'
 import {
   AppRegistry, Text, View,
-  Alert, BackAndroid
+  Alert, BackAndroid, ToastAndroid
 }                          from 'react-native'
 import {
   StackNavigator,

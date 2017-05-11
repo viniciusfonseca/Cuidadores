@@ -34,7 +34,7 @@ class Login extends React.Component {
         navigateTo(this.props, Actions.PossibleRoutes.REGISTER)
     }
 
-    authenticateUser = async() => {
+    authenticateUser() {
         let login = this.state.login.trim()
         let pass  = this.state.pass.trim()
 
@@ -45,8 +45,7 @@ class Login extends React.Component {
 
         this.setState({ auth: true })
         let userService = this.props.user.userService
-        try {
-            let isAuth = await userService.authenticate(login, pass)
+        userService.authenticate(login, pass).then(isAuth => {
             this.setState({ auth: false })
             if (isAuth) {
                 replaceState(this.props, Actions.PossibleRoutes.HOME_)
@@ -54,10 +53,9 @@ class Login extends React.Component {
             else {
                 ToastAndroid.show("Usuario e/ou senha inválida", ToastAndroid.SHORT)
             }
-        } catch(e) {
-            Alert.alert("erro", e.message)
+        }).catch(e => {
             ToastAndroid.show("Ocorreu um erro durante a autenticação", ToastAndroid.SHORT)
-        }
+        })
     }
 
     onLayout = event => {
@@ -104,7 +102,7 @@ class Login extends React.Component {
                                 onSubmitEditing={this.authenticateUser.bind(this)} />
                         </View>
                     </View>
-                    <View style={_s("flex-row center-a center-b", {'margin':7})}>
+                    <View style={_s("flex-row center-a center-b", {'marginVertical':7})}>
                         <ImprovedTouchable onPress={this.goToRegister.bind(this)} style={_s("button flex button-a flex-stretch", {'marginRight':10})}>
                             <View style={_s("flex center-a center-b")}>
                                 <Text>Cadastrar</Text>

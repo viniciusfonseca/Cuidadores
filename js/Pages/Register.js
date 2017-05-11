@@ -14,7 +14,7 @@ import ReactNative, {
 import LinearGradient from 'react-native-linear-gradient'
 
 import _s, { gradientA } from '../Style'
-import { noop } from '../App'
+import { noop, replaceState } from '../App'
 
 import NavBar from '../Components/NavBar'
 import SubHeader from '../Components/SubHeader'
@@ -75,7 +75,7 @@ class FormField extends React.Component {
                                 <DatePicker
                                     style={_s("form-section", {'width':'100%'})}
                                     mode="date"
-                                    date={this.props.context.state.user.date}
+                                    date={this.props.value}
                                     placeholder="Selecione a data"
                                     format="DD/MM/YYYY"
                                     maxDate={new Date()}
@@ -92,10 +92,7 @@ class FormField extends React.Component {
                                         }
                                     }}
                                     ref={this.props.inputRef}
-                                    onDateChange={date => {
-                                        this.props.context.state.user.date = date
-                                        this.props.context.forceUpdate()
-                                    }}
+                                    onDateChange={this.props.onChange}
                                 />
                             )
                         case FormField.TYPE.MASKED:
@@ -108,9 +105,12 @@ class FormField extends React.Component {
                                     onSubmitEditing={this.props.handleSubmit}
                                     placeholderTextColor="#CCCCCC"
                                     style={_s("form-section", { 'padding': 0, 'marginBottom': this.props.last ? 8 : 0 })} 
-                                    ref={e => this.props.inputRef = this.maskedInputRef = e}
+                                    ref={el => {
+                                        this.maskedInputRef = el
+                                        this.props.inputRef(el)
+                                    }}
                                     onFocus={this.props.onFocus}
-                                    onBlur={() => this.props.onChange(this.maskedInputRef.getElement().getRawValue())}
+                                    onBlur={() => this.props.onChange(this.maskedInputRef.getRawValue())}
                                 />
                             )
                         case 'text':
@@ -119,7 +119,7 @@ class FormField extends React.Component {
                                 <TextInput accessibilityLabel={this.props.label} 
                                     underlineColorAndroid="transparent"
                                     style={_s("form-section", { 'padding': 0, 'marginBottom': this.props.last ? 8 : 0 })}
-                                    onChangeText={this.props.onChangeText || noop}
+                                    onChangeText={this.props.onChange || noop}
                                     keyboardType="ascii-capable"
                                     returnKeyType="next"
                                     secureTextEntry={this.props.password}
@@ -205,21 +205,24 @@ class Register extends React.Component {
 
     static get FIELD_NAMES() {
         return {
-            nome: 'Nome',
-            cpf: 'CPF',
-            datanasc: 'Data de nascimento',
-            estado: 'Estado',
-            cidade: 'cidade',
-            telefone: 'telefone',
-            email: 'E-mail',
-            senha: 'Senha',
-            vSenha: 'Confirmação de senha'
+            nome:       'Nome',
+            cpf:        'CPF',
+            datanasc:   'Data de nascimento',
+            estado:     'Estado',
+            cidade:     'Cidade',
+            telefone:   'Telefone',
+            email:      'E-mail',
+            senha:      'Senha',
+            vSenha:     'Confirmação de senha'
         }
     }
 
     registerUser() {
         let cadData = {}, vSenha = null
         for (let [k, v] of Object.entries(this.state.user)) {
+            if (!(k in Register.FIELD_NAMES)) {
+                continue
+            }
             v = v || ""
             v = v.toString().trim()
             if (!v) {
@@ -229,13 +232,17 @@ class Register extends React.Component {
         }
         if (this.state.user.senha !== this.state.user.vSenha) {
             ToastAndroid.show("Confirme a sua senha corretamente", ToastAndroid.SHORT)
+            return
         }
         let userData = Object.assign({}, this.state.user)
         delete userData.vSenha
+        delete userData.userService
+
         this.setState({ registering: true })
         setTimeout(() => {
             this.setState({ registering: false })
             ToastAndroid.show("Cadastro realizado com sucesso", ToastAndroid.SHORT)
+            replaceState(this.props, Actions.PossibleRoutes.HOME_)
         }, 3000)
     }
 
@@ -275,7 +282,8 @@ class Register extends React.Component {
                         <FormField
                             label="Data de nascimento" 
                             type="date"
-                            context={this} />
+                            value={this.state.user.datanasc}
+                            onChange={v => {this.state.user.datanasc = v; this.forceUpdate()}} />
                         <FormField
                             inputRef={this.sInput.call(this, "estado")} 
                             label="Estado" 

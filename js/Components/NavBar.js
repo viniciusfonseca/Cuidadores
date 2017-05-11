@@ -33,7 +33,7 @@ const NavBar = props => (
       </ImprovedTouchable>)}
     </View>
     <LinearGradient colors={['#AAA','transparent']}
-      style={{'position':'absolute','height':4,'width':'100%','bottom':-4,'left':0,'zIndex':1}} />
+      style={{'position':'absolute','height':4,'width':'100%','bottom':-4,'left':0,'zIndex':9}} />
   </LinearGradient>
 )
 export default NavBar

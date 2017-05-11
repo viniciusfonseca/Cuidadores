@@ -70,7 +70,7 @@ const HomePage = DrawerNavigator({
        screen: ProfilePage
    }
 }, {
-    drawerWidth: 240,
+    drawerWidth: 255,
     drawerPosition: 'right',
     contentComponent: props => <Sidemenu {...props} />
 })

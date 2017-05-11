@@ -28,7 +28,9 @@ class Init extends React.Component {
     }
 }
 
-const mapStateToProps = state => ({})
+const mapStateToProps = state => ({
+    db: state.db
+})
 
 const InitPage = connect(mapStateToProps)(Init)
 export default InitPage
