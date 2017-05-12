@@ -217,7 +217,7 @@ class Register extends React.Component {
         }
     }
 
-    registerUser() {
+    registerUser = async() => {
         let cadData = {}, vSenha = null
         for (let [k, v] of Object.entries(this.state.user)) {
             if (!(k in Register.FIELD_NAMES)) {
@@ -239,11 +239,19 @@ class Register extends React.Component {
         delete userData.userService
 
         this.setState({ registering: true })
-        setTimeout(() => {
+
+        let userExists = (await this.props.db.fetchData("user_exists", { email: userData.email })).rows[0].R
+
+        if (userExists) {
             this.setState({ registering: false })
-            ToastAndroid.show("Cadastro realizado com sucesso", ToastAndroid.SHORT)
-            replaceState(this.props, Actions.PossibleRoutes.HOME_)
-        }, 3000)
+            ToastAndroid.show("Já existe um usuário cadastrado com este endereço de email", ToastAndroid.SHORT)
+            return
+        }
+        await this.props.db.fetchData("create_user", userData)
+
+        this.setState({ registering: false })
+        ToastAndroid.show("Cadastro realizado com sucesso", ToastAndroid.SHORT)
+        replaceState(this.props, Actions.PossibleRoutes.HOME_)
     }
 
     render() {
@@ -339,7 +347,8 @@ class Register extends React.Component {
 }
 
 const mapStateToProps = state => ({
-    db: state.db
+    db: state.db,
+    user: state.user
 })
 const RegisterPage = connect(mapStateToProps)(Register)
 export default RegisterPage

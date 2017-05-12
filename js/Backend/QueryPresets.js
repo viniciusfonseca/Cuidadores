@@ -1,13 +1,22 @@
-let presets = [
+export const PRESETS_ID = {
+    USER_EXISTS:    "user_exists",
+    CREATE_USER:    "create_user",
+    RETRIEVE_USER:  "retrieve_user",
+    AUTHENTICATION: "authentication",
+    CUIDADORES:     "cuidadores",
+    DEPENDENTES:    "dependentes",
+    ESPECIALIDADES: "especialidades"
+}
+const presets = [
     {
-        "id": "user_exists",
+        "id": PRESETS_ID.USER_EXISTS,
         "base": `SELECT EXISTS(
                     SELECT 1 
                     FROM USUARIO 
-                    WHERE USUARIO.email = '<email>')`
+                    WHERE USUARIO.email = '<email>') AS R`
     },
     {
-        "id": "create_user",
+        "id": PRESETS_ID.CREATE_USER,
         "base": `INSERT INTO USUARIO (
                     Email, 
                     Senha, 
@@ -32,15 +41,11 @@ let presets = [
                 )`
     },
     {
-        "id": "retrieve_user",
+        "id": PRESETS_ID.RETRIEVE_USER,
         "base": `SELECT * FROM USUARIO WHERE USUARIO.Email = <email>`
     },
     {
-        "id": "create_person",
-        "base": `INSERT INTO <tipo> VALUES()`
-    },
-    {
-        "id": "authentication",
+        "id": PRESETS_ID.AUTHENTICATION,
         "base": `SELECT EXISTS(
                     SELECT 1 
                     FROM USUARIO 
@@ -59,7 +64,7 @@ let presets = [
         ]
     },
     {
-        id: "cuidadores",
+        id: PRESETS_ID.CUIDADORES,
         base: `SELECT CUIDADOR.CodigoUsuario,
                       CUIDADOR.Nome,
                       CUIDADOR.Telefone,
@@ -81,7 +86,7 @@ let presets = [
         ]
     },
     {
-        id: "dependentes",
+        id: PRESETS_ID.DEPENDENTES,
         base: `SELECT DEPENDENTE.Nome,
                     DEPENDENTE.Localidade,
                     RESPONSAVEL.Telefone
@@ -90,7 +95,7 @@ let presets = [
                     ON DEPENDETE.CodigoDependente = RESPONSAVEL.CodigoResponsavel`
     },
     {
-        id: "especialidades",
+        id: PRESETS_ID.ESPECIALIDADES,
         base: `SELECT * FROM ESPECIALIDADE`
     }
 ]
