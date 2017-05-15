@@ -17,6 +17,8 @@ import { noop, navigateTo, replaceState } from '../App'
 import ImprovedTouchable from '../Components/ImprovedTouchable'
 import Spinner from '../Components/Spinner'
 
+import { PRESETS_ID } from '../Backend/QueryPresets'
+
 class Login extends React.Component {
 
     constructor(props) {
@@ -28,6 +30,9 @@ class Login extends React.Component {
             pass:  "",
             shouldShowCross: dims.height >= 400
         }
+    }
+
+    componentDidMount() {
         this.props.user.reset()
     }
     
@@ -45,7 +50,7 @@ class Login extends React.Component {
         }
 
         this.setState({ auth: true })
-        let userService = this.props.user.userService
+        let userService = this.props.user
         userService.authenticate(login, pass).then(isAuth => {
             this.setState({ auth: false })
             if (isAuth) {
@@ -130,7 +135,7 @@ class Login extends React.Component {
 
 const mapStateToProps = state => ({
     db: state.db,
-    user: state.user,
+    user: state.user
 })
 
 const LoginPage = connect(mapStateToProps)(Login)

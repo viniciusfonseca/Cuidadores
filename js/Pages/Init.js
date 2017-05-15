@@ -1,7 +1,7 @@
 import React from 'react'
 
 import {
-    View, ActivityIndicator
+    View, ActivityIndicator, Alert
 } from 'react-native'
 import _s, { gradientA } from '../Style'
 import { replaceState } from '../App'
@@ -16,20 +16,31 @@ import LinearGradient from 'react-native-linear-gradient'
 class Init extends React.Component {
 
     componentDidMount() {
-        initialize()
+        this.initialize()
     }
 
-    initialize = async() => {
-        let { user } = this.props
-        await user.init()
-        let userStat = user.getStatus()
-        let isFilled = userStat == User.STATUS.INITIATED_FILLED
+    initialize() {
         setTimeout(() => {
-            replaceState(this.props, 
-                isFilled? 
-                    Actions.PossibleRoutes.LOGIN : 
-                    Actions.PossibleRoutes.HOME_
-            )
+            (async() => {
+                let user = new User(this.props.db)
+                let action = Actions.assignUser(user)
+                this.props.dispatch(action)
+
+                // const getK = o => Object.keys(o).toString()
+                // Alert.alert("keys",getK(user))
+                try {
+                    await user.init()
+                } catch (e) {
+                    Alert.alert("ERR",JSON.stringify(e.message))
+                }
+                let userStat = user.getStatus()
+                let isFilled = userStat == User.STATUS.INITIATED_FILLED
+                replaceState(this.props, 
+                    !isFilled? 
+                        Actions.PossibleRoutes.LOGIN : 
+                        Actions.PossibleRoutes.HOME_
+                )
+            })()
         }, 700)
     } 
 
@@ -45,7 +56,7 @@ class Init extends React.Component {
 
 const mapStateToProps = state => ({
     db: state.db,
-    user: user.state
+    user: state.user
 })
 
 const InitPage = connect(mapStateToProps)(Init)

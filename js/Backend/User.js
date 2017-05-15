@@ -1,4 +1,4 @@
-import { AsyncStorage } from 'react-native'
+import { AsyncStorage, Alert } from 'react-native'
 import { $timeout } from './Utils'
 import { PRESETS_ID } from './QueryPresets.js'
 import { initialState } from '../Reducers'
@@ -44,41 +44,54 @@ export default class User {
     constructor(db) { this.db = db }
 
     getStatus() { return this._status }
+    setDB(db) { this.db = db }
 
     init = async() => {
         try {
             let id = await AsyncStorage.getItem('CodigoUsuario')
+            Alert.alert("id",id)
             if (!id) {
                 this._status = User.STATUS.INITIATED_NULL
             }
             else {
                 this._status = User.STATUS.INITIATED_FILLED
+                // Alert.alert("status",""+this._status)
                 return await this.load()
             }
         } catch(e) {
-            this._status = User.INIT_ERROR
+            this._status = User.STATUS.INIT_ERROR
             throw new UserStorageError("Error initializing user structure.")
         }
     }
 
     load = async() => {
-        let userPtr = {}
+        let userData = {}
         let keys = Object.keys(this.fields)
-        (await Promise.all(
-            keys.map(key => AsyncStorage.getItem(key))
-        )).forEach((value, index) => {
-            userPtr[keys[index]] = value[index]
-        })
-        this.fields = userPtr
+        try {
+            (await Promise.all(
+                keys.map(key => AsyncStorage.getItem(key))
+            )).forEach((value, index) => {
+                userData[keys[index]] = value[index]
+            })
+        } catch (e) {
+            throw new UserStorageError("Error retrieving internal storage data.")
+        }
+        Alert.alert("load",JSON.stringify(userData))
+        this.fields = userData
     }
 
     write = async data => {
-        let asyncOperations = []
-        Object.keys(data).filter(key => !!key && key in this.fields).forEach(key => {
-            this.fields[key] = data[key]
-            asyncOperations.push(AsyncStorage.setItem(key, data[key].toString()))
-        })
-        return await Promise.all(asyncOperations)
+        try {
+            let asyncOperations = []
+            Object.keys(data).filter(key => !!key && key in this.fields).forEach(key => {
+                this.fields[key] = data[key]
+                asyncOperations.push(AsyncStorage.setItem(key, String(data[key])))
+            })
+            return await Promise.all(asyncOperations)
+        } catch (e) {
+            Alert.alert("ERR", JSON.stringify(e.message))
+            throw e
+        }
     }
 
     reset = async() => { await this.write(User.INITIAL_STATE) }
@@ -102,7 +115,8 @@ export default class User {
             userData = (await this.db.fetchData(PRESETS_ID.RETRIEVE_USER, {
                 email: login,
                 pass
-            }))[0]
+            })).rows[0]
+            Alert.alert("data", JSON.stringify(userData))
             await this.write(userData)
             return true
         } catch (e) {

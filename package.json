@@ -18,7 +18,7 @@
     "react-native-keyboard-aware-scroll-view": "^0.2.8",
     "react-native-linear-gradient": "^2.0.0",
     "react-native-masked-text": "^1.3.3",
-    "react-native-modal": "file:///C:\\Users\\Vinicius.VINI-NOTE.000\\react-native-modal",
+    "react-native-modal": "git+https://github.com/viniciusfonseca/react-native-modal.git",
     "react-native-simple-radio-button": "^2.5.0-alpha.1",
     "react-native-sqlite-storage": "^3.2.2",
     "react-native-vector-icons": "^4.0.1",

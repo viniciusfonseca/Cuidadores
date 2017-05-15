@@ -19,7 +19,7 @@ export function location(state = initialState.location, action) {
 export function user(state = initialState.user, action) {
     switch (action.type) {
         case Actions.USER_ASSIGN:
-            return Object.assign({}, state, action.user)
+            return action.user
         default:
             return state
     }

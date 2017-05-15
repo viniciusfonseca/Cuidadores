@@ -68,15 +68,9 @@ class Cuidadores extends React.Component {
 
   componentDidMount() {
     this.db = new Database()
-    this.user = new User(this.db)
     this.db.init()
 
     let action = Actions.assignDB(this.db)
-    store.dispatch(action)
-
-    action = Actions.assignUser({
-      user: this.user
-    })
     store.dispatch(action)
 
     this.storeUnsubscribeFnPtr = store.subscribe( this.onAppStateChange.bind(this) )

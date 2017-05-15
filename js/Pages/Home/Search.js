@@ -104,11 +104,6 @@ class Search extends React.Component {
                     <ScrollView style={{'padding':8}}>
                         <View style={_s("flex-row center-b",{'marginBottom':8})}>
                             <Text style={_s("flex",{'fontWeight':'bold'})}>Especialidades</Text>
-                            <ImprovedTouchable onPress={this.clearFilters.bind(this)} hitSlop={8}>
-                                <View style={_s("center-a",{ alignSelf: 'stretch'})}>
-                                    <Text>Limpar</Text>
-                                </View>
-                            </ImprovedTouchable>
                         </View>
                         {
                             this.especialidades.map(especPtr => (
