@@ -59,6 +59,9 @@ export default class Database {
         }
         q = q.replace(/<\w+>/g, sub => {
             sub = sub.replace(/^<|>$/g, '')
+            if (!params[sub]) {
+                return '1'
+            }
             if (!preset.filters) {
                 return params[sub]
             }

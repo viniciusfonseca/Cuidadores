@@ -1,6 +1,10 @@
 import React from 'react'
 
-import { View } from 'react-native'
+import { 
+    View, ScrollView, Text,
+    Image
+} from 'react-native'
+import { TabNavigator } from 'react-navigation'
 
 import { connect } from 'react-redux'
 
@@ -20,6 +24,10 @@ class Profile extends React.Component {
         return (
             <View style={_s("flex blank")}>
                 <NavBar enableNavBtn={true} navigation={this.props.navigation} />
+                <View style={_s("flex")}>
+                    <ScrollView>
+                    </ScrollView>
+                </View>
             </View>
         )
     }
@@ -27,5 +35,6 @@ class Profile extends React.Component {
 
 const mapStateToProps = state => ({})
 const ProfilePage = connect(mapStateToProps)(Profile)
+
 
 export default ProfilePage

@@ -19,6 +19,7 @@ import { noop, replaceState } from '../App'
 import NavBar from '../Components/NavBar'
 import SubHeader from '../Components/SubHeader'
 import Spinner from '../Components/Spinner'
+import Button from '../Components/Button'
 
 import RadioForm, {
     RadioButton,
@@ -28,6 +29,8 @@ import RadioForm, {
 import DatePicker from 'react-native-datepicker'
 
 import { TextInputMask } from 'react-native-masked-text'
+
+import { TestaCPF } from '../Utils'
 
 const FormSection = props => (
     <View style={_s("form-section")}>
@@ -136,14 +139,6 @@ class FormField extends React.Component {
     }
 }
 
-const Button = props => (
-    <TouchableHighlight onPress={props.onPress} underlayColor="#48ce48" style={_s("button flex button-a flex-stretch", { 'marginBottom': 20 })}>
-        <View style={_s("flex center-a center-b")}>
-            <Text>{props.label}</Text>
-        </View>
-    </TouchableHighlight>
-)
-
 class Register extends React.Component {
     inputHash = {}
 
@@ -219,7 +214,10 @@ class Register extends React.Component {
 
     registerUser = async() => {
         let cadData = {}, vSenha = null
-        for (let [k, v] of Object.entries(this.state.user)) {
+        let userData = Object.assign({}, this.state.user)
+        delete userData.userService
+
+        for (let [k, v] of Object.entries(userData)) {
             if (!(k in Register.FIELD_NAMES)) {
                 continue
             }
@@ -229,15 +227,19 @@ class Register extends React.Component {
                 ToastAndroid.show("O seguinte campo está vazio: " + Register.FIELD_NAMES[k], ToastAndroid.SHORT)
                 return
             }
+            if (k === 'cpf' && !TestaCPF(v)) {
+                ToastAndroid.show("Informe um CPF válido", ToastAndroid.SHORT)
+                return
+            }
+            userData[k] = v
         }
         if (this.state.user.senha !== this.state.user.vSenha) {
             ToastAndroid.show("Confirme a sua senha corretamente", ToastAndroid.SHORT)
             return
         }
-        let userData = Object.assign({}, this.state.user)
-        delete userData.vSenha
-        delete userData.userService
 
+        delete userData.vSenha
+        
         this.setState({ registering: true })
 
         let userExists = (await this.props.db.fetchData("user_exists", { email: userData.email })).rows[0].R

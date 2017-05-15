@@ -80,6 +80,9 @@ export const gradientA = ['#FFFFFF','#74FD71']
 export const gradientB = ['#c1fbbf','#2db72d']
 export const gradientC = ['#def7e4','#8de589']
 
+export const PRIMARY_COLOR = "#48ce48"
+export const SECONDARY_COLOR = "#94ef94"
+
 export default function _s(s, o) {
     return Object.assign.apply(
         Object, 

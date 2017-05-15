@@ -9,10 +9,18 @@ export default class ImprovedTouchable extends React.Component {
         setTimeout(this.props.onPress)
     }
     render() {
+        let { hitSlop } = this.props || 0
+        hitSlop = {
+            top: hitSlop,
+            left: hitSlop,
+            right: hitSlop,
+            bottom: hitSlop
+        }
         return (
             <TouchableOpacity activeOpacity={0.5} ref={e=>this.b=e}
                 onPress={this.handleTouch.bind(this)}
-                style={this.props.style}>
+                style={this.props.style}
+                hitSlop={hitSlop}>
                 {this.props.children || <View></View>}
             </TouchableOpacity>
         )

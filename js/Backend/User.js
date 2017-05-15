@@ -1,6 +1,7 @@
 import { AsyncStorage } from 'react-native'
 import { $timeout } from './Utils'
 import { PRESETS_ID } from './QueryPresets.js'
+import { initialState } from '../Reducers'
 
 class UserStorageError extends Error {}
 
@@ -24,16 +25,7 @@ export default class User {
     _status = User.STATUS.NOT_INITIATED
     db = null
 
-    fields = {
-        id:       "",
-        email:    "",
-        type:     "",
-        name:     "",
-        birthday: "",
-        state:    "",
-        city:     "",
-        phone:    ""
-    }
+    fields = initialState.user
 
     constructor(db) { this.db = db }
 
@@ -69,6 +61,8 @@ export default class User {
         })
         return await Promise.all(asyncOperations)
     }
+
+    reset = async() => { await this.write(initialState.user) }
 
     authenticate = async(login, pass) => {
         let res = null

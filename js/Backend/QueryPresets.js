@@ -65,23 +65,21 @@ const presets = [
     },
     {
         id: PRESETS_ID.CUIDADORES,
-        base: `SELECT CUIDADOR.CodigoUsuario,
-                      CUIDADOR.Nome,
-                      CUIDADOR.Telefone,
-                GROUP_CONCAT(
-                    (SELECT ESPECIALIDADE.DescricaoEspecialidade 
-                    FROM ESPECIALIDADE
-                    INNER JOIN CUIDADOR_ESPECIALIDADE
-                    ON CUIDADOR_ESPECIALIDADE.CodigoEspecialidade = ESPECIALIDADE.CodigoEspecialidade
-                    INNER JOIN CUIDADOR
-                    ON CUIDADOR.CodigoUsuario = CUIDADOR_ESPECIALIDADE.CodigoUsuario)
-                ,' ,') AS Especialidades 
+        base: `SELECT CUIDADOR.CodigoUsuario AS CodigoUsuario,
+                      CUIDADOR.Nome AS Nome,
+                      CUIDADOR.Telefone AS Telefone,
+                      GROUP_CONCAT(ESPECIALIDADE.DescricaoEspecialidade,' ,') AS Especialidades 
                 FROM CUIDADOR
-                WHERE <especialidade>`,
+                INNER JOIN CUIDADOR_ESPECIALIDADE
+                ON CUIDADOR.CodigoUsuario = CUIDADOR_ESPECIALIDADE.CodigoUsuario
+                INNER JOIN ESPECIALIDADE
+                ON ESPECIALIDADE.CodigoEspecialidade = CUIDADOR_ESPECIALIDADE.CodigoEspecialidade
+                WHERE <especialidades>
+                GROUP BY CUIDADOR.CodigoUsuario`,
         filters: [
             {
-                "name": "especialidade",
-                "SQL": "1"
+                "name": "especialidades",
+                "SQL": `ESPECIALIDADE.CodigoEspecialidade IN (<?>)`
             }
         ]
     },
@@ -96,7 +94,9 @@ const presets = [
     },
     {
         id: PRESETS_ID.ESPECIALIDADES,
-        base: `SELECT * FROM ESPECIALIDADE`
+        base: `SELECT ESPECIALIDADE.CodigoEspecialidade, 
+                    ESPECIALIDADE.DescricaoEspecialidade 
+                FROM ESPECIALIDADE`
     }
 ]
 export default presets

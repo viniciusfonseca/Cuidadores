@@ -52,6 +52,7 @@ class Cuidadores extends React.Component {
     this.state = {
       shouldShowNavBar: false
     }
+    // Alert.alert("start","start")
     // BackAndroid.addEventListener("hardwareBackPress", () => {
     //   console.log("*** LOG: navStack.length - " + this.navStack.length + " ***")
     //   if (this.navStack.length > 1) {
@@ -118,6 +119,9 @@ export const replaceState = (props, routeName) => {
 }
 
 export const navigateTo = (props, stateName, params = {}) => {
+  if (params) {
+    Alert.alert("params detected", JSON.stringify(params))
+  }
   let action = NavigationActions.navigate({
     routeName: stateName,
     params
