@@ -74,8 +74,8 @@ class Cuidadores extends React.Component {
     let action = Actions.assignDB(this.db)
     store.dispatch(action)
 
-    action = Actions.updateUserData({
-      userService: this.user
+    action = Actions.assignUser({
+      user: this.user
     })
     store.dispatch(action)
 

@@ -42,7 +42,7 @@ const presets = [
     },
     {
         "id": PRESETS_ID.RETRIEVE_USER,
-        "base": `SELECT * FROM USUARIO WHERE USUARIO.Email = <email>`
+        "base": `SELECT * FROM USUARIO WHERE USUARIO.Email = <email> AND USUARIO.Senha = <pass>`
     },
     {
         "id": PRESETS_ID.AUTHENTICATION,

@@ -1,7 +1,7 @@
 import React from 'react'
 
+import User from '../Backend/User'
 import * as Actions from '../Actions'
-import { initialState } from '../Reducers'
 
 import { connect } from 'react-redux'
 
@@ -140,13 +140,33 @@ class FormField extends React.Component {
 }
 
 class Register extends React.Component {
+
+    static get FIELD_NAMES() {
+        return {
+            nome:       'Nome',
+            cpf:        'CPF',
+            datanasc:   'Data de nascimento',
+            estado:     'Estado',
+            cidade:     'Cidade',
+            telefone:   'Telefone',
+            email:      'E-mail',
+            senha:      'Senha',
+            vSenha:     'Confirmação de senha'
+        }
+    }
+
     inputHash = {}
 
     constructor(props) {
         super(props)
         this.state = {
             registering: false,
-            user: Object.assign({}, initialState.user)
+            user: Object.assign({}, (() => {
+                let o = {}
+                Object.keys(Register.FIELD_NAMES).forEach(key => o[key] = '')
+                o.vSenha = ''
+                return o
+            })())
         }
     }
 
@@ -196,20 +216,6 @@ class Register extends React.Component {
                 true
             );
         }, 150);
-    }
-
-    static get FIELD_NAMES() {
-        return {
-            nome:       'Nome',
-            cpf:        'CPF',
-            datanasc:   'Data de nascimento',
-            estado:     'Estado',
-            cidade:     'Cidade',
-            telefone:   'Telefone',
-            email:      'E-mail',
-            senha:      'Senha',
-            vSenha:     'Confirmação de senha'
-        }
     }
 
     registerUser = async() => {
@@ -281,31 +287,31 @@ class Register extends React.Component {
                             label="Nome" 
                             onFocus={this.handleFocus.call(this, "nome")} 
                             handleSubmit={this.handleNext.call(this,"nome")} 
-                            onChange={value => this.state.user.nome = value} />
+                            onChange={value => this.state.user.Nome = value} />
                         <FormField
                             inputRef={this.sInput.call(this, "cpf")}
                             label="CPF" 
                             type="masked" 
                             maskType="cpf"
                             shouldBlur={true} onFocus={this.handleFocus.call(this,"cpf")}
-                            onChange={value => this.state.user.cpf = value} />
+                            onChange={value => this.state.user.CPF = value} />
                         <FormField
                             label="Data de nascimento" 
                             type="date"
                             value={this.state.user.datanasc}
-                            onChange={v => {this.state.user.datanasc = v; this.forceUpdate()}} />
+                            onChange={v => {this.state.user.DataNascimento = v; this.forceUpdate()}} />
                         <FormField
                             inputRef={this.sInput.call(this, "estado")} 
                             label="Estado" 
                             onFocus={this.handleFocus.call(this,"estado")} 
                             handleSubmit={this.handleNext.call(this,"estado")}
-                            onChange={value => this.state.user.estado = value} />
+                            onChange={value => this.state.user.Estado = value} />
                         <FormField
                             inputRef={this.sInput.call(this, "cidade")}
                             label="Cidade" 
                             onFocus={this.handleFocus.call(this,"cidade")} 
                             handleSubmit={this.handleNext.call(this,"cidade")}
-                            onChange={value => this.state.user.cidade = value} />
+                            onChange={value => this.state.user.Cidade = value} />
                         <FormField
                             inputRef={this.sInput.call(this, "telefone")} 
                             label="Telefone" 
@@ -314,7 +320,7 @@ class Register extends React.Component {
                             last={true}
                             shouldBlur={true}
                             onFocus={this.handleFocus.call(this,"telefone")}
-                            onChange={value => this.state.user.telefone = value} />
+                            onChange={value => this.state.user.Telefone = value} />
                         <FormSection label="DADOS DE AUTENTICAÇÃO" />
                         <FormField
                             inputRef={this.sInput.call(this, "email")} 
@@ -322,7 +328,7 @@ class Register extends React.Component {
                             shouldNotCapitalize={true} 
                             onFocus={this.handleFocus.call(this,"email")} 
                             handleSubmit={this.handleNext.call(this,"email")}
-                            onChange={value => this.state.user.email = value} />
+                            onChange={value => this.state.user.Email = value} />
                         <FormField 
                             inputRef={this.sInput.call(this, "senha")} 
                             label="Senha" 
@@ -330,7 +336,7 @@ class Register extends React.Component {
                             shouldNotCapitalize={true} 
                             onFocus={this.handleFocus.call(this,"senha")} 
                             handleSubmit={this.handleNext.call(this,"senha")}
-                            onChange={value => this.state.user.senha = value} />
+                            onChange={value => this.state.user.Senha = value} />
                         <FormField 
                             inputRef={this.sInput.call(this, "vSenha")} 
                             label="Digite sua senha novamente" 

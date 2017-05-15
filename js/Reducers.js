@@ -3,18 +3,7 @@ import { combineReducers } from 'redux'
 
 export const initialState = {
     location: {},
-    user: {
-        userService: null,
-        tipo: 0,
-        nome: '',
-        cpf: '',
-        datanasc: '',
-        estado: '',
-        cidade: '',
-        telefone: '',
-        email: '',
-        senha: ''
-    },
+    user: {},
     db: {}
 }
 
@@ -29,8 +18,8 @@ export function location(state = initialState.location, action) {
 
 export function user(state = initialState.user, action) {
     switch (action.type) {
-        case Actions.USER_UPDATE:
-            return Object.assign({}, state, action.fields)
+        case Actions.USER_ASSIGN:
+            return Object.assign({}, state, action.user)
         default:
             return state
     }

@@ -28,6 +28,7 @@ class Login extends React.Component {
             pass:  "",
             shouldShowCross: dims.height >= 400
         }
+        this.props.user.reset()
     }
     
     goToRegister() {

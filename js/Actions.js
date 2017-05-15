@@ -45,10 +45,10 @@ export function assignDB(db) {
 }
 
 /* -- */
-export const USER_UPDATE = 'USER_UPDATE'
-export function updateUserData(fields) {
+export const USER_ASSIGN = 'USER_ASSIGN'
+export function assignUser(user) {
     return {
-        type: USER_UPDATE,
-        fields
+        type: USER_ASSIGN,
+        user
     }
 }

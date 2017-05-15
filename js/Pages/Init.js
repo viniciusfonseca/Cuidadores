@@ -9,14 +9,29 @@ import { replaceState } from '../App'
 import * as Actions from '../Actions'
 import { connect } from 'react-redux'
 
+import User from '../Backend/User'
+
 import LinearGradient from 'react-native-linear-gradient'
 
 class Init extends React.Component {
+
     componentDidMount() {
-        setTimeout(() => {
-            replaceState(this.props, Actions.PossibleRoutes.LOGIN)
-        }, 700)
+        initialize()
     }
+
+    initialize = async() => {
+        let { user } = this.props
+        await user.init()
+        let userStat = user.getStatus()
+        let isFilled = userStat == User.STATUS.INITIATED_FILLED
+        setTimeout(() => {
+            replaceState(this.props, 
+                isFilled? 
+                    Actions.PossibleRoutes.LOGIN : 
+                    Actions.PossibleRoutes.HOME_
+            )
+        }, 700)
+    } 
 
     render() {
         return (
@@ -29,7 +44,8 @@ class Init extends React.Component {
 }
 
 const mapStateToProps = state => ({
-    db: state.db
+    db: state.db,
+    user: user.state
 })
 
 const InitPage = connect(mapStateToProps)(Init)
