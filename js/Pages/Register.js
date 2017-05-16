@@ -143,14 +143,14 @@ class Register extends React.Component {
 
     static get FIELD_NAMES() {
         return {
-            nome:       'Nome',
-            cpf:        'CPF',
-            datanasc:   'Data de nascimento',
-            estado:     'Estado',
-            cidade:     'Cidade',
-            telefone:   'Telefone',
-            email:      'E-mail',
-            senha:      'Senha',
+            Nome:       'Nome',
+            CPF:        'CPF',
+            DataNascimento:   'Data de nascimento',
+            Estado:     'Estado',
+            Cidade:     'Cidade',
+            Telefone:   'Telefone',
+            Email:      'E-mail',
+            Senha:      'Senha',
             vSenha:     'Confirmação de senha'
         }
     }
@@ -163,8 +163,9 @@ class Register extends React.Component {
             registering: false,
             user: Object.assign({}, (() => {
                 let o = {}
-                Object.keys(Register.FIELD_NAMES).forEach(key => o[key] = '')
+                Object.keys(User.INITIAL_STATE).forEach(key => o[key] = '')
                 o.vSenha = ''
+                o.Tipo = 0
                 return o
             })())
         }
@@ -222,13 +223,13 @@ class Register extends React.Component {
         let cadData = {}, vSenha = null
         let userData = Object.assign({}, this.state.user)
         delete userData.userService
-
+        // Alert.alert("userData",JSON.stringify(userData))
         for (let [k, v] of Object.entries(userData)) {
-            if (!(k in Register.FIELD_NAMES)) {
+            if (!(k in User.INITIAL_STATE)) {
                 continue
             }
-            v = v || ""
-            v = v.toString().trim()
+            v = String(v) || ""
+            v = v.trim()
             if (!v) {
                 ToastAndroid.show("O seguinte campo está vazio: " + Register.FIELD_NAMES[k], ToastAndroid.SHORT)
                 return
@@ -239,7 +240,7 @@ class Register extends React.Component {
             }
             userData[k] = v
         }
-        if (this.state.user.senha !== this.state.user.vSenha) {
+        if (this.state.user.Senha !== this.state.user.vSenha) {
             ToastAndroid.show("Confirme a sua senha corretamente", ToastAndroid.SHORT)
             return
         }
@@ -298,7 +299,7 @@ class Register extends React.Component {
                         <FormField
                             label="Data de nascimento" 
                             type="date"
-                            value={this.state.user.datanasc}
+                            value={this.state.user.DataNascimento}
                             onChange={v => {this.state.user.DataNascimento = v; this.forceUpdate()}} />
                         <FormField
                             inputRef={this.sInput.call(this, "estado")} 

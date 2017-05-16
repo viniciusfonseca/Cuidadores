@@ -21,6 +21,7 @@
     "react-native-modal": "git+https://github.com/viniciusfonseca/react-native-modal.git",
     "react-native-simple-radio-button": "^2.5.0-alpha.1",
     "react-native-sqlite-storage": "^3.2.2",
+    "react-native-tab-view": "0.0.65",
     "react-native-vector-icons": "^4.0.1",
     "react-navigation": "^1.0.0-beta.9",
     "react-redux": "^5.0.4",

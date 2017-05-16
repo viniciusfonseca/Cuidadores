@@ -1,7 +1,7 @@
 import React from 'react'
 
 import {
-    View, ActivityIndicator, Alert
+    View, ActivityIndicator, Alert, AsyncStorage
 } from 'react-native'
 import _s, { gradientA } from '../Style'
 import { replaceState } from '../App'

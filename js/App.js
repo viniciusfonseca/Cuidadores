@@ -114,7 +114,7 @@ export const replaceState = (props, routeName) => {
 
 export const navigateTo = (props, stateName, params = {}) => {
   if (params) {
-    Alert.alert("params detected", JSON.stringify(params))
+    // Alert.alert("params detected", JSON.stringify(params))
   }
   let action = NavigationActions.navigate({
     routeName: stateName,

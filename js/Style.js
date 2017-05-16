@@ -82,6 +82,7 @@ export const gradientC = ['#def7e4','#8de589']
 
 export const PRIMARY_COLOR = "#48ce48"
 export const SECONDARY_COLOR = "#94ef94"
+export const TERTIARY_COLOR = "#eaf9ea"
 
 export default function _s(s, o) {
     return Object.assign.apply(

@@ -8,7 +8,7 @@ import { TabNavigator } from 'react-navigation'
 
 import { connect } from 'react-redux'
 
-import _s from '../../Style'
+import _s, { TERTIARY_COLOR } from '../../Style'
 
 import NavBar from '../../Components/NavBar'
 
@@ -26,6 +26,8 @@ class Profile extends React.Component {
                 <NavBar enableNavBtn={true} navigation={this.props.navigation} />
                 <View style={_s("flex")}>
                     <ScrollView>
+                        <View style={{ height: 120, backgroundColor: TERTIARY_COLOR, borderBottomWidth: 1, borderColor: '#DDD' }}>
+                        </View>
                     </ScrollView>
                 </View>
             </View>

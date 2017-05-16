@@ -48,19 +48,19 @@ export default class User {
 
     init = async() => {
         try {
-            let id = await AsyncStorage.getItem('CodigoUsuario')
-            Alert.alert("id",id)
-            if (!id) {
+            let email = await AsyncStorage.getItem('Email')
+            let pass = null
+            if (!email) {
                 this._status = User.STATUS.INITIATED_NULL
             }
             else {
                 this._status = User.STATUS.INITIATED_FILLED
-                // Alert.alert("status",""+this._status)
-                return await this.load()
+                pass = await AsyncStorage.getItem('Senha')
+                return await this.authenticate(email, pass)
             }
         } catch(e) {
             this._status = User.STATUS.INIT_ERROR
-            throw new UserStorageError("Error initializing user structure.")
+            throw new UserStorageError("Error initializing user structure: " + e.message)
         }
     }
 
@@ -76,7 +76,7 @@ export default class User {
         } catch (e) {
             throw new UserStorageError("Error retrieving internal storage data.")
         }
-        Alert.alert("load",JSON.stringify(userData))
+        // Alert.alert("load",JSON.stringify(userData))
         this.fields = userData
     }
 
@@ -116,7 +116,7 @@ export default class User {
                 email: login,
                 pass
             })).rows[0]
-            Alert.alert("data", JSON.stringify(userData))
+            // Alert.alert("data", JSON.stringify(userData))
             await this.write(userData)
             return true
         } catch (e) {
