@@ -79,6 +79,7 @@ export default class Database {
             return filterCfg.SQL.replace(/<\?>/g, params[sub] || "")
         })
         try {
+            // Alert.alert("query",q)
             let [qResult] = await this._dbPtr.executeSql(q)
             let rows = []
             for (let i = 0; i < qResult.rows.length; i++) {
@@ -87,7 +88,7 @@ export default class Database {
             return new DatabaseResult(DatabaseResult.STATUS.OK, rows)
         }
         catch (e) {
-            Alert.alert("ERR", e.message)
+            // Alert.alert("ERR", e.message)
             throw new DatabaseResult(DatabaseResult.STATUS.QUERY_ERROR, e)
         }
     }

@@ -8,7 +8,7 @@ import { TabViewAnimated, TabBar, SceneMap } from 'react-native-tab-view'
 
 import { connect } from 'react-redux'
 
-import _s, { SECONDARY_COLOR, TERTIARY_COLOR } from '../../Style'
+import _s, { PRIMARY_COLOR, SECONDARY_COLOR, TERTIARY_COLOR } from '../../Style'
 
 import NavBar from '../../Components/NavBar'
 
@@ -59,7 +59,9 @@ class Profile extends React.Component {
                 <View style={_s("flex")}>
                     <View style={_s("flex-row",Profile.upperSectionStyle)}>
                         <View style={_s("center-a")}>
-                            <Text>TODO: Avatar</Text>
+                            <Image source={require('../../img/avatar-large.png')} 
+                                style={{ 'height': 60, 'width': 60, 'borderRadius': 30 }}
+                                resizeMode="contain" />
                         </View>
                         <View>
                             <Text>TODO: Info perfil</Text>
@@ -71,7 +73,8 @@ class Profile extends React.Component {
                         renderHeader={props => (
                             <TabBar 
                                 style={{backgroundColor: SECONDARY_COLOR}} 
-                                labelStyle={{color: '#000'}} 
+                                labelStyle={{color: '#000'}}
+                                indicatorStyle={{backgroundColor:PRIMARY_COLOR,height:5}}
                                 {...props}/>
                             )}
                         onRequestChangeTab={this.handleChangeTab.bind(this)}/>

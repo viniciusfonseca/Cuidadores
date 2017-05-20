@@ -249,7 +249,7 @@ class Register extends React.Component {
         
         this.setState({ registering: true })
 
-        let userExists = (await this.props.db.fetchData("user_exists", { email: userData.email })).rows[0].R
+        let userExists = !!((await this.props.db.fetchData("user_exists", { email: userData.Email })).rows[0].R)
 
         if (userExists) {
             this.setState({ registering: false })

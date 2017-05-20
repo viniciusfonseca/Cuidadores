@@ -29,15 +29,15 @@ const presets = [
                     Tipo
                 )
                 VALUES (
-                    '<email>', 
-                    '<pass>', 
-                    '<cpf>', 
-                    '<telefone>', 
-                    '<nome>',
-                    '<datanasc>',
-                    '<estado>',
-                    '<cidade>',
-                    '<tipo>'
+                    '<Email>', 
+                    '<Senha>', 
+                    '<CPF>', 
+                    '<Telefone>', 
+                    '<Nome>',
+                    '<DataNascimento>',
+                    '<Estado>',
+                    '<Cidade>',
+                    '<Tipo>'
                 )`
     },
     {
