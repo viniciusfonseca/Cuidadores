@@ -4,43 +4,49 @@ import {
     View, ActivityIndicator, Alert, AsyncStorage
 } from 'react-native'
 import _s, { gradientA } from '../Style'
-import { replaceState } from '../App'
+import { replaceState, navigateTo } from '../App'
 
 import * as Actions from '../Actions'
 import { connect } from 'react-redux'
+import { NavigationActions } from 'react-navigation'
 
 import User from '../Backend/User'
+import Database from '../Backend/Database'
 
 import LinearGradient from 'react-native-linear-gradient'
 
 class Init extends React.Component {
 
     componentDidMount() {
-        this.initialize()
+        (async () => {
+            let action = Actions.assignStackNavigation(this.props.navigation)
+            this.props.dispatch(action)
+
+            let db = new Database()
+            await db.init()
+            action = Actions.assignDB(db)
+            this.props.dispatch(action)
+
+            let user = new User(db)
+            await user.init()
+            action = Actions.assignUser(user)
+            this.props.dispatch(action)
+
+            this.initialize()
+        })()
     }
 
     initialize() {
         setTimeout(() => {
-            (async() => {
-                let user = new User(this.props.db)
-                let action = Actions.assignUser(user)
-                this.props.dispatch(action)
+            let userStat = this.props.user.getStatus()
+            let isFilled = userStat == User.STATUS.INITIATED_FILLED
 
-                // const getK = o => Object.keys(o).toString()
-                // Alert.alert("keys",getK(user))
-                try {
-                    await user.init()
-                } catch (e) {
-                    Alert.alert("ERR",JSON.stringify(e.message))
-                }
-                let userStat = user.getStatus()
-                let isFilled = userStat == User.STATUS.INITIATED_FILLED
-                replaceState(this.props, 
-                    !isFilled? 
-                        Actions.PossibleRoutes.LOGIN : 
-                        Actions.PossibleRoutes.HOME_
-                )
-            })()
+            if( !isFilled ) {
+                replaceState(this.props, Actions.PossibleRoutes.LOGIN)
+            }
+            else {
+                replaceState(this.props, Actions.PossibleRoutes.HOME_)
+            }
         }, 700)
     } 
 

@@ -53,6 +53,7 @@ class Profile extends React.Component {
     handleChangeTab = index => this.setState({ index })
 
     render() {
+        // Alert.alert("isParentNavigation", String( this.props.navigation == this.props.parentNavigation ))
         return (
             <View style={_s("flex blank")}>
                 <NavBar enableNavBtn={true} navigation={this.props.navigation} />
@@ -96,7 +97,9 @@ class Contratos extends React.Component {
     }
 }
 
-const mapStateToProps = state => ({})
+const mapStateToProps = state => ({
+    parentNavigation: state.navigation
+})
 const ProfilePage = connect(mapStateToProps)(Profile)
 
 export default ProfilePage

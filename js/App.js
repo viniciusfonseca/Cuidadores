@@ -13,13 +13,12 @@ import configureStore      from './configureStore'
 
 import * as Actions        from './Actions'
 
-import Database            from './Backend/Database'
-import User                from './Backend/User'
-
 import InitPage            from './Pages/Init'
 import LoginPage           from './Pages/Login'
 import RegisterPage        from './Pages/Register'
 import HomePage            from './Pages/Home'
+
+import ProfilePage         from './Pages/Home/Profile'
 
 const Navigator = StackNavigator({
   [Actions.PossibleRoutes.INIT]: {
@@ -33,6 +32,12 @@ const Navigator = StackNavigator({
   },
   [Actions.PossibleRoutes.HOME_]: {
     screen: HomePage
+  },
+  [Actions.PossibleRoutes.HOME.PROFILE]: {
+    screen: ProfilePage
+  },
+  [Actions.PossibleRoutes.PROFILE_VIEW]: {
+    screen: ProfilePage
   }
 }, {
   initialRouteName: Actions.PossibleRoutes.INIT,
@@ -44,35 +49,11 @@ let store = configureStore()
 export function noop() {}
 
 class Cuidadores extends React.Component {
-  db = null
   navigator = null
-
-  constructor(props) {
-    super(props)
-    this.state = {
-      shouldShowNavBar: false
-    }
-    // Alert.alert("start","start")
-    // BackAndroid.addEventListener("hardwareBackPress", () => {
-    //   console.log("*** LOG: navStack.length - " + this.navStack.length + " ***")
-    //   if (this.navStack.length > 1) {
-    //     this.navigator.pop()
-    //     this.navStack.pop()
-    //     return true
-    //   }
-    //   return false
-    // })
-  }
 
   storeUnsubscribeFnPtr = null
 
   componentDidMount() {
-    this.db = new Database()
-    this.db.init()
-
-    let action = Actions.assignDB(this.db)
-    store.dispatch(action)
-
     this.storeUnsubscribeFnPtr = store.subscribe( this.onAppStateChange.bind(this) )
   }
 
@@ -82,9 +63,7 @@ class Cuidadores extends React.Component {
     }
   }
 
-  onAppStateChange() {
-    
-  }
+  onAppStateChange() {}
 
   render() {
     return (
@@ -102,14 +81,14 @@ export const navigateBack = (props) => {
   props.navigation.dispatch(action)
 }
 
-export const replaceState = (props, routeName) => {
-  let action = NavigationActions.reset({
+export const replaceState = (props, routeName, params = {}, action = {}) => {
+  let _action = NavigationActions.reset({
     index: 0,
     actions: [
-      NavigationActions.navigate({ routeName })
+      NavigationActions.navigate({ routeName, params, action })
     ]
   })
-  props.navigation.dispatch(action)
+  props.navigation.dispatch(_action)
 }
 
 export const navigateTo = (props, stateName, params = {}) => {

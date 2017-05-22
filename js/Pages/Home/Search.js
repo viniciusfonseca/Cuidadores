@@ -138,8 +138,8 @@ class Search extends React.Component {
 
     renderItem({ item, index }) {
         return (
-            <ImprovedTouchable onPress={this.accessProfile.bind(this, item)}>
-                <View key={item.CodigoUsuario} style={_s("flex-row", { 'height': 50, 'padding': 8 })}>
+            <ImprovedTouchable onPress={this.accessProfile.bind(this, item)} key={item.CodigoUsuario}>
+                <View style={_s("flex-row", { 'height': 50, 'padding': 8 })}>
                     <Image source={require('../../img/avatar-large.png')} 
                         style={{ 'height': 40, 'width': 40, 'borderRadius': 20 }}
                         resizeMode="contain" />
@@ -154,10 +154,11 @@ class Search extends React.Component {
 
     accessProfile(context) {
         let getK = o => Object.keys(o).toString()
-        Alert.alert("keys", getK(this.props.navigation.state))
+        // Alert.alert("keys", getK(this.props.navigation.state))
+        // this.props.parentNavigation.navigate(Actions.PossibleRoutes.HOME.PROFILE)
         navigateTo({
-            navigation: this.props.navigation.state.params.parentNavigation 
-        }, Actions.PossibleRoutes.HOME.PROFILE)
+            navigation: this.props.parentNavigation
+        }, Actions.PossibleRoutes.PROFILE_VIEW)
     }
 
     render() {
@@ -192,7 +193,8 @@ class Search extends React.Component {
 }
 
 const mapStateToProps = state => ({
-    db: state.db
+    db: state.db,
+    parentNavigation: state.navigation
 })
 const SearchPage = connect(mapStateToProps)(Search)
 

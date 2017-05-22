@@ -26,7 +26,7 @@ const SidemenuOption = props => (
     <ImprovedTouchable onPress={() => props.navigateTo? navigateTo(props, props.navigateTo, props.params || {}): props.onPress()}>
         <View style={_s("flex-row flex-stretch", {'height':40})}>
             <View style={_s("center-a center-b", {'width' :40})}>
-                <Icon name={props.name} style={{'fontSize':20}}></Icon>
+                <Icon name={props.icon} style={{'fontSize':20}}></Icon>
             </View>
             <View style={_s("flex flex-row center-b")}>
                 <Text>{props.label}</Text>
@@ -36,8 +36,8 @@ const SidemenuOption = props => (
 )
 
 const getLabelFromUserType = {
-    0: 'Procurar Cuidadores',
-    1: 'Procurar Dependentes'
+    '0': 'Procurar Cuidadores',
+    '1': 'Procurar Dependentes'
 }
 
 class Sidemenu extends React.Component {
@@ -50,16 +50,16 @@ class Sidemenu extends React.Component {
             },
             {
                 text: 'Sim',
-                onPress: () => {
-                    replaceState({
-                        navigation: this.props.parentNavigation
-                    }, Actions.PossibleRoutes.LOGIN)
-                }
+                onPress: () => replaceState({
+                    navigation: this.props.parentNavigation
+                }, Actions.PossibleRoutes.LOGIN)
             }
         ])
     }
 
     render() {
+        let { user } = this.props
+        // Alert.alert("keys", Object.keys(this.props).toString)
         return (
             <View style={_s("flex")}>
                 <LinearGradient style={{'position':'relative','height':60,'alignItems':'center','justifyContent':'center'}} colors={gradientC} >
@@ -68,9 +68,17 @@ class Sidemenu extends React.Component {
                         style={{'position':'absolute','height':4,'width':'100%','bottom':-4,'left':0,'right':0,'zIndex':1}} />
                 </LinearGradient>
                 <ScrollView>
-                    <SidemenuOption name="magnifying-glass" label={getLabelFromUserType[0]} navigateTo={Actions.PossibleRoutes.HOME.SEARCH}  navigation={this.props.navigation} params={{parentNavigation: this.props.parentNavigation}} />
-                    <SidemenuOption name="user"             label="Meu Perfil" navigateTo={Actions.PossibleRoutes.HOME.PROFILE}   navigation={this.props.navigation} />
-                    <SidemenuOption name="log-out"          label="Sair" onPress={this.promptUserLogout.bind(this)}/>
+                    <SidemenuOption icon="magnifying-glass"
+                        label={getLabelFromUserType[ String(this.props.user.fields.Tipo) || 0 ]} 
+                        navigateTo={Actions.PossibleRoutes.HOME.SEARCH}  
+                        navigation={this.props.navigation} />
+                    <SidemenuOption icon="user"
+                        label="Meu Perfil" 
+                        navigateTo={Actions.PossibleRoutes.HOME.PROFILE} 
+                        navigation={this.props.navigation} />
+                    <SidemenuOption icon="log-out"
+                        label="Sair"
+                        onPress={this.promptUserLogout.bind(this)}/>
                 </ScrollView>
             </View>
         )
@@ -78,13 +86,14 @@ class Sidemenu extends React.Component {
 }
 
 const mapStateToProps = state => ({
-    user: state.user
+    user: state.user,
+    parentNavigation: state.navigation
 })
-connect(mapStateToProps)(Sidemenu)
+const ReduxifiedSidemenu = connect(mapStateToProps)(Sidemenu)
 
 const HomePage = DrawerNavigator({
    [Actions.PossibleRoutes.HOME.SEARCH]: {
-       screen: SearchPage,
+       screen: SearchPage
    },
    [Actions.PossibleRoutes.HOME.PROFILE]: {
        screen: ProfilePage
@@ -92,7 +101,7 @@ const HomePage = DrawerNavigator({
 }, {
     drawerWidth: 255,
     drawerPosition: 'right',
-    contentComponent: props => <Sidemenu parentNavigation={props.navigation} {...props} />
+    contentComponent: props => <ReduxifiedSidemenu {...props} />
 })
 
 export default HomePage

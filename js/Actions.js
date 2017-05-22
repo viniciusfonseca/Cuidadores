@@ -24,7 +24,8 @@ export const PossibleRoutes = {
     HOME: {
         SEARCH: 'HOME.SEARCH',
         PROFILE: 'HOME.PROFILE'
-    }
+    },
+    PROFILE_VIEW: 'PROFILE_VIEW'
 }
 export function navigateTo(location, params = {}) {
     return {
@@ -50,5 +51,14 @@ export function assignUser(user) {
     return {
         type: USER_ASSIGN,
         user
+    }
+}
+
+/* -- */
+export const NAVIGATION_ASSIGN = 'NAVIGATION_ASSIGN'
+export function assignStackNavigation(navigation) {
+    return {
+        type: NAVIGATION_ASSIGN,
+        navigation
     }
 }

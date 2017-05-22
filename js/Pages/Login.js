@@ -4,6 +4,8 @@ import * as Actions from '../Actions'
 
 import { connect } from 'react-redux'
 
+import { NavigationActions } from 'react-navigation'
+
 import {
     View, Text, TextInput, Alert, Image,
     ToastAndroid, Dimensions
@@ -54,7 +56,12 @@ class Login extends React.Component {
         userService.authenticate(login, pass).then(isAuth => {
             this.setState({ auth: false })
             if (isAuth) {
-                replaceState(this.props, Actions.PossibleRoutes.HOME_)
+                replaceState(this.props, Actions.PossibleRoutes.HOME_, {}, NavigationActions.navigate({
+                    routeName: Actions.PossibleRoutes.HOME_,
+                    params: {
+                        parentNavigation: this.props.navigation
+                    }
+                }))
             }
             else {
                 ToastAndroid.show("Usuario e/ou senha inválida", ToastAndroid.SHORT)

@@ -4,7 +4,8 @@ import { combineReducers } from 'redux'
 export const initialState = {
     location: {},
     user: {},
-    db: {}
+    db: {},
+    navigation: {}
 }
 
 export function location(state = initialState.location, action) {
@@ -34,10 +35,20 @@ export function db(state = initialState.db, action) {
     }
 }
 
+export function navigation(state = initialState.navigation, action) {
+    switch (action.type) {
+        case Actions.NAVIGATION_ASSIGN:
+            return action.navigation
+        default:
+            return state 
+    }
+}
+
 const appCombinedReducers = combineReducers({
     location,
     user,
-    db
+    db,
+    navigation
 })
 
 export default appCombinedReducers
