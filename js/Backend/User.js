@@ -123,4 +123,61 @@ export default class User {
             throw e
         }
     }
+
+    getCodigoUsuario() { return this.fields.CodigoUsuario }
+
+    selfDecorate() {
+        switch (this.getCodigoUsuario()) {
+            case User.USER_TYPE.RESPONSAVEL:
+                return ResponsavelDecorator(this)
+            case User.USER_TYPE.CUIDADOR:
+                return CuidadorDecorator(this)
+            default:
+        }
+    }
+}
+
+export function ResponsavelDecorator( userContext ) {
+    userContext.__specBind__ = User.USER_TYPE.RESPONSAVEL
+
+    userContext.obterDependentes = async() => {
+        return await userContext.db.fetchData(PRESETS_ID.DEPENDENTES, {
+            CodigoUsuario: userContext.getCodigoUsuario()
+        })
+    }
+
+    userContext.criarDependente = async({ NomeDependente }) => {
+        await userContext.db.fetchData(PRESETS_ID.CREATE_DEPENDENTE, {
+            NomeDependente
+        })
+        return await userContext.obterDependentes()
+    }
+
+    userContext.atualizarDependente = async({
+        CodigoDependente,
+        NomeDependente
+    }) => {
+        await userContext.db.fetchData(PRESETS_ID.UPDATE_DEPENDENTE, {
+            CodigoDependente,
+            NomeDependente
+        })
+        return await userContext.obterDependentes()
+    }
+
+    userContext.apagarDependente = async({
+        CodigoDependente
+    }) => {
+        await userContext.db.fetchData(PRESETS_ID.DELETE_DEPENDENTE, {
+            CodigoDependente
+        })
+    }
+
+    return userContext
+}
+
+export function CuidadorDecorator( userContext ) {
+
+    userContext.__specBind__ = User.USER_TYPE.CUIDADOR
+
+    return userContext
 }

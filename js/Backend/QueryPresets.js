@@ -1,11 +1,18 @@
 export const PRESETS_ID = {
-    USER_EXISTS:    "user_exists",
-    CREATE_USER:    "create_user",
-    RETRIEVE_USER:  "retrieve_user",
-    AUTHENTICATION: "authentication",
-    CUIDADORES:     "cuidadores",
-    DEPENDENTES:    "dependentes",
-    ESPECIALIDADES: "especialidades"
+    USER_EXISTS:       "user_exists",
+    CREATE_USER:       "create_user",
+    RETRIEVE_USER:     "retrieve_user",
+    AUTHENTICATION:    "authentication",
+
+    CUIDADORES:        "cuidadores",
+    ESPECIALIDADES:    "especialidades",
+    USER_VIEW:         "USER_VIEW",
+
+    DEPENDENTES:       "DEPENDENTES",
+    CREATE_DEPENDENTE: "CREATE_DEPENDENTE",
+    UPDATE_DEPENDENTE: "UPDATE_DEPENDENTE",
+    DELETE_DEPENDENTE: "DELETE_DEPENDENTE"
+
 }
 const presets = [
     {
@@ -64,6 +71,52 @@ const presets = [
         ]
     },
     {
+        "id": PRESETS_ID.USER_VIEW,
+        "base": `SELECT USUARIO.Nome AS Nome,
+                    USUARIO.Telefone AS Telefone, 
+                    Usuario.Cidade || ', ' || Usuario.Estado AS Localizacao,
+                    Usuario.Tipo AS Tipo,
+                    --------------------------
+                    CASE WHEN Usuario.Tipo = 0 
+                    THEN ''
+                    WHEN Usuario.Tipo = 1 THEN '[' || (
+                        SELECT
+                            GROUP_CONCAT('{' ||
+                                "'DescricaoEspecialidade"' || ':"' || ESPECIALIDADE.DescricaoEspecialidade || '"' ||
+                            '}')
+                        FROM ESPECIALIDADE
+                        INNER JOIN CUIDADOR_ESPECIALIDADE
+                            ON ESPECIALIDADE.CodigoEspecialidade = CUIDADOR_ESPECIALIDADE.CodigoEspecialidade
+                        WHERE CUIDADOR_ESPECIALIDADE.CodigoUsuario = USUARIO.CodigoUsuario
+                        GROUP BY ESPECIALIDADE.CodigoEspecialidade
+                    ) || ']' 
+                    END AS Especialidades,
+                    ---------------------------
+                    CASE WHEN USUARIO.Tipo = 0
+                    THEN '[' || (
+                        SELECT 
+                            GROUP_CONCAT('{' ||
+                                '"CodigoDependente"' || ':"' || DEPENDENTE.CodigoDependente || '"' ||
+                                '"NomeDependente"'   || ':"' || DEPENDENTE.NomeDependente   || '"' ||
+                            '}')
+                        FROM DEPENDENTE
+                        WHERE DEPENDENTE.CodigoUsuario = USUARIO.CodigoUsuario
+                    ) || ']'
+                    WHEN Usuario.Tipo = 1 THEN ''
+                    END AS Dependentes
+                    ---------------------------
+                    (
+                        SELECT '[' ||
+                            GROUP_CONCAT('{' || 
+                                '"CodigoUsuario"' || ':"' || USUARIO.CodigoUsuario || '"' ||
+                                '"Nome"'          || ':"' || USUARIO.Nome          || '"' ||
+                            '}')
+                        ']'
+                    ) AS Contratos
+                FROM USUARIO
+                WHERE USUARIO.CodigoUsuario = <CodigoUsuario>`
+    },
+    {
         id: PRESETS_ID.CUIDADORES,
         base: `SELECT CUIDADOR.CodigoUsuario AS CodigoUsuario,
                       CUIDADOR.Nome AS Nome,
@@ -84,19 +137,34 @@ const presets = [
         ]
     },
     {
-        id: PRESETS_ID.DEPENDENTES,
-        base: `SELECT DEPENDENTE.Nome,
-                    DEPENDENTE.Localidade,
-                    RESPONSAVEL.Telefone
-                FROM DEPENDENTE
-                INNER JOIN RESPONSAVEL
-                    ON DEPENDETE.CodigoDependente = RESPONSAVEL.CodigoResponsavel`
-    },
-    {
         id: PRESETS_ID.ESPECIALIDADES,
         base: `SELECT ESPECIALIDADE.CodigoEspecialidade, 
                     ESPECIALIDADE.DescricaoEspecialidade 
                 FROM ESPECIALIDADE`
+    },
+
+    {
+        id: PRESETS_ID.DEPENDENTES,
+        base: `SELECT DEPENDENTE.CodigoDependente,
+                    DEPENDENTE.NomeDependente
+                FROM DEPENDENTE
+                WHERE DEPENDENTE.CodigoUsuario = <CodigoUsuario>`
+    },
+    {
+        id: PRESETS_ID.CREATE_DEPENDENTE,
+        base: `INSERT INTO DEPENDENTE(
+            NomeDependente, CodigoUsuario
+        )
+        VALUES (
+            '<NomeDependente>', <CodigoUsuario>
+        )`
+    },
+    {
+        id: PRESETS_ID.UPDATE_DEPENDENTE,
+        base: `UPDATE DEPENDENTE 
+                SET 
+                    NomeDependente = '<NomeDependente>'
+                WHERE DEPENDENTE.CodigoDependente = '<CodigoDependente>'`
     }
 ]
 export default presets

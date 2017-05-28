@@ -153,9 +153,6 @@ class Search extends React.Component {
     }
 
     accessProfile(context) {
-        let getK = o => Object.keys(o).toString()
-        // Alert.alert("keys", getK(this.props.navigation.state))
-        // this.props.parentNavigation.navigate(Actions.PossibleRoutes.HOME.PROFILE)
         navigateTo({
             navigation: this.props.parentNavigation
         }, Actions.PossibleRoutes.PROFILE_VIEW)

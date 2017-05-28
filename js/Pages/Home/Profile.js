@@ -25,7 +25,11 @@ class Profile extends React.Component {
 
     constructor(props) {
         super(props)
+        const params = Object.assign({}, this.props.navigation.state.params)
+        let user = {}
+        user.CodigoUsuario = params && params.CodigoUsuario || this.props.user.CodigoUsuario
         this.state = {
+            user,
             loading: true,
             index: 0,
             routes: [
@@ -41,6 +45,10 @@ class Profile extends React.Component {
         }
     }
 
+    componentDidMount() {
+        
+    }
+
     renderScene = ({ route }) => {
         switch (route.key) {
             case '1':
@@ -54,40 +62,66 @@ class Profile extends React.Component {
 
     render() {
         // Alert.alert("isParentNavigation", String( this.props.navigation == this.props.parentNavigation ))
+        let { user } = this.state
         return (
             <View style={_s("flex blank")}>
                 <NavBar enableNavBtn={true} navigation={this.props.navigation} />
-                <View style={_s("flex")}>
-                    <View style={_s("flex-row",Profile.upperSectionStyle)}>
-                        <View style={_s("center-a")}>
-                            <Image source={require('../../img/avatar-large.png')} 
-                                style={{ 'height': 60, 'width': 60, 'borderRadius': 30 }}
-                                resizeMode="contain" />
-                        </View>
-                        <View>
-                            <Text>TODO: Info perfil</Text>
-                        </View>
+                {this.state.loading ? (
+                    <View style={{'paddingVertical':15}}>
+                        <ActivityIndicator size={45} />
                     </View>
-                    <TabViewAnimated
-                        navigationState={this.state}
-                        renderScene={this.renderScene.bind(this)}
-                        renderHeader={props => (
-                            <TabBar 
-                                style={{backgroundColor: SECONDARY_COLOR}} 
-                                labelStyle={{color: '#000'}}
-                                indicatorStyle={{backgroundColor:PRIMARY_COLOR,height:5}}
-                                {...props}/>
-                            )}
-                        onRequestChangeTab={this.handleChangeTab.bind(this)}/>
-                </View>
+                ) : (
+                    <View style={_s("flex")}>
+                        <View style={_s("flex-row",Profile.upperSectionStyle)}>
+                            <View style={_s("center-a")}>
+                                <Image source={require('../../img/avatar-large.png')} 
+                                    style={{ 'height': 60, 'width': 60, 'borderRadius': 30 }}
+                                    resizeMode="contain" />
+                            </View>
+                            <View>
+                                <Text>{user.Nome}</Text>
+                                <Text>Telefone: {user.Telefone}</Text>
+                                <Text>{user.Estado}, {user.Cidade}</Text>
+                            </View>
+                        </View>
+                        <TabViewAnimated
+                            navigationState={this.state}
+                            renderScene={this.renderScene.bind(this)}
+                            renderHeader={props => (
+                                <TabBar 
+                                    style={{backgroundColor: SECONDARY_COLOR}} 
+                                    labelStyle={{color: '#000'}}
+                                    indicatorStyle={{backgroundColor:PRIMARY_COLOR,height:5}}
+                                    {...props}/>
+                                )}
+                            onRequestChangeTab={this.handleChangeTab.bind(this)}/>
+                    </View>
+                )}
             </View>
         )
     }
 }
 
 class Dependentes extends React.Component {
+    constructor(props) {
+        super(props)
+        this.state = {
+            loading: false
+        }
+    }
+
+    componentDidMount() {
+        
+    }
+
     render() {
-        return <View><Text>TODO: Dependentes</Text></View>
+        return (
+            <View>
+                (this.state.loading ? <View style={{'paddingVertical':15}}>
+                    <ActivityIndicator size={45} />
+                </View>)
+            </View>
+        )
     }
 }
 
@@ -98,7 +132,8 @@ class Contratos extends React.Component {
 }
 
 const mapStateToProps = state => ({
-    parentNavigation: state.navigation
+    parentNavigation: state.navigation,
+    user: state.user
 })
 const ProfilePage = connect(mapStateToProps)(Profile)
 

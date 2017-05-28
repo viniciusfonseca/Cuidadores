@@ -1,6 +1,7 @@
 import React from 'react'
 
 import User from '../Backend/User'
+import { PRESETS_ID } from '../Backend/QueryPresets'
 import * as Actions from '../Actions'
 
 import { connect } from 'react-redux'
@@ -12,6 +13,7 @@ import ReactNative, {
     ToastAndroid, Keyboard
 } from 'react-native'
 import LinearGradient from 'react-native-linear-gradient'
+import { NavigationActions } from 'react-navigation'
 
 import _s, { gradientA } from '../Style'
 import { noop, replaceState } from '../App'
@@ -145,7 +147,7 @@ class Register extends React.Component {
         return {
             Nome:       'Nome',
             CPF:        'CPF',
-            DataNascimento:   'Data de nascimento',
+            DataNascimento: 'Data de nascimento',
             Estado:     'Estado',
             Cidade:     'Cidade',
             Telefone:   'Telefone',
@@ -228,7 +230,7 @@ class Register extends React.Component {
             if (!(k in User.INITIAL_STATE)) {
                 continue
             }
-            v = String(v) || ""
+            v = v || ""
             v = v.trim()
             if (!v) {
                 ToastAndroid.show("O seguinte campo está vazio: " + Register.FIELD_NAMES[k], ToastAndroid.SHORT)
@@ -249,18 +251,26 @@ class Register extends React.Component {
         
         this.setState({ registering: true })
 
-        let userExists = !!((await this.props.db.fetchData("user_exists", { email: userData.Email })).rows[0].R)
+        let userExists = Boolean((await this.props.db.fetchData( PRESETS_ID.USER_EXISTS, { email: userData.Email })).rows[0].R)
 
         if (userExists) {
             this.setState({ registering: false })
             ToastAndroid.show("Já existe um usuário cadastrado com este endereço de email", ToastAndroid.SHORT)
             return
         }
-        await this.props.db.fetchData("create_user", userData)
+        await this.props.db.fetchData(PRESETS_ID.CREATE_USER, userData)
+        let dadosUsuarioBackend = (await this.props.db.fetchData(PRESETS_ID.RETRIEVE_USER, {
+            email: userData.Email,
+            pass: userData.Senha
+        }))[0]
+        await this.props.user.write( dadosUsuarioBackend )
 
         this.setState({ registering: false })
         ToastAndroid.show("Cadastro realizado com sucesso", ToastAndroid.SHORT)
-        replaceState(this.props, Actions.PossibleRoutes.HOME_)
+        replaceState(this.props, Actions.PossibleRoutes.HOME_, {}, NavigationActions({
+            routeName: Actions.PossibleRoutes.HOME.PROFILE,
+            params: { CodigoUsuario: dadosUsuarioBackend.CodigoUsuario }
+        }))
     }
 
     render() {
@@ -281,7 +291,7 @@ class Register extends React.Component {
                             buttonOuterSize={36}
                             buttonColor="#000000"
                             style={{'height':70,'width':'100%','justifyContent':'center'}}
-                            onPress={value => this.state.user.tipo = value} />
+                            onPress={value => this.state.user.Tipo = value} />
                         <FormSection label="DADOS PESSOAIS" />
                         <FormField
                             inputRef={this.sInput.call(this, "nome")} 
