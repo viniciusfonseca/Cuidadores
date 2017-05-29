@@ -6,6 +6,7 @@ import {
     FlatList
 } from 'react-native'
 import { TabViewAnimated, TabBar, SceneMap } from 'react-native-tab-view'
+import LinearGradient from 'react-native-linear-gradient'
 
 import { PRESETS_ID } from '../../Backend/QueryPresets'
 import User from '../../Backend/User'
@@ -24,7 +25,9 @@ class Profile extends React.Component {
             backgroundColor: TERTIARY_COLOR, 
             borderBottomWidth: 1, 
             borderColor: '#DDD',
-            padding: 15
+            padding: 15,
+            position: 'relative',
+            zIndex: 0
         }
     }
     user = {}
@@ -34,6 +37,7 @@ class Profile extends React.Component {
         const params = Object.assign({}, this.props.navigation.state.params)
         this.user.CodigoUsuario = params && params.CodigoUsuario || this.props.user.CodigoUsuario
         this.isVisitingOwnProfile = this.user.CodigoUsuario == this.props.user.CodigoUsuario
+        this.asStack = Boolean(params.asStack)
         this.state = {
             loading: true,
             index: 0,
@@ -118,7 +122,13 @@ class Profile extends React.Component {
         let user = this.user
         return (
             <View style={_s("flex blank")}>
-                <NavBar enableNavBtn={true} navigation={this.props.navigation} />
+                <NavBar
+                    enableBackBtn={this.asStack}
+                    enableNavBtn={!this.asStack}
+                    navigation={this.props.navigation}
+                    parentNavigation={this.props.parentNavigation} />
+                <LinearGradient colors={['#AAA','transparent']}
+      style={{'position':'absolute','height':4,'width':'100%','bottom':-4,'left':0,'zIndex':9}} />
                 {this.state.loading ? (
                     <View style={{'paddingVertical':15}}>
                         <ActivityIndicator size={45} />

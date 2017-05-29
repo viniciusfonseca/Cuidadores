@@ -13,11 +13,11 @@ import ImprovedTouchable from './ImprovedTouchable'
 const NavBar = props => (
   <LinearGradient style={_s("flex-row center-b", {
     height: 60,
-    position: 'relative'
+    position: 'relative',
   })} colors={gradientC}>
     <View style={_s("flex")}>
       {props.enableBackBtn && (
-      <ImprovedTouchable onPress={() => navigateBack(props)}
+      <ImprovedTouchable onPress={() => navigateBack(props.parentNavigation ? {navigation: props.parentNavigation} : props)}
         style={{'width':50}}>
         <Icon name="chevron-left" color="#555" style={{'fontSize':44}} />
       </ImprovedTouchable>)}
