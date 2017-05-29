@@ -190,15 +190,16 @@ class Contratos extends React.Component {
 }
 
 class Especialidades extends React.Component {
-    renderItem( item ) {
+    renderItem({ item }) {
         return (
-            <View key={item.CodigoUsuario} style={_s("center-a", {height: 40, paddingLeft: 8})}>
+            <View style={_s("center-a", {height: 50, paddingLeft: 8, borderColor:'#DDD',borderBottomWidth:1})}>
                 <Text>{item.DescricaoEspecialidade}</Text>
             </View>
         )
     }
 
     render() {
+        // Alert.alert("render spec", JSON.stringify( this.props.value ))
         return this.props.value.length == 0 ? (
             this.props.isVisitingOwnProfile ? (
                 <View style={_s("center-a center-b", {height: 85})}>
@@ -211,7 +212,7 @@ class Especialidades extends React.Component {
                 </View>
             )
         ) : (
-            <View style={_s("flex")}>
+            <View style={_s("flex", {paddingHorizontal:12})}>
                 <FlatList
                     data={this.props.value}
                     renderItem={this.renderItem.bind(this)}
