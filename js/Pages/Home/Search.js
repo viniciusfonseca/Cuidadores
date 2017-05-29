@@ -138,7 +138,7 @@ class Search extends React.Component {
 
     renderItem({ item, index }) {
         return (
-            <ImprovedTouchable onPress={this.accessProfile.bind(this, item)} key={item.CodigoUsuario}>
+            <ImprovedTouchable onPress={this.accessProfile.bind(this, item)}>
                 <View style={_s("flex-row", { 'height': 50, 'padding': 8 })}>
                     <Image source={require('../../img/avatar-large.png')} 
                         style={{ 'height': 40, 'width': 40, 'borderRadius': 20 }}
@@ -152,10 +152,13 @@ class Search extends React.Component {
         )
     }
 
-    accessProfile(context) {
+    accessProfile( context ) {
         navigateTo({
             navigation: this.props.parentNavigation
-        }, Actions.PossibleRoutes.PROFILE_VIEW)
+        }, Actions.PossibleRoutes.PROFILE_VIEW, {
+            CodigoUsuario: context.CodigoUsuario,
+            asStack: true
+        })
     }
 
     render() {
@@ -165,8 +168,9 @@ class Search extends React.Component {
                 <NavBar enableNavBtn={true} navigation={this.props.navigation} />
                 <View style={_s("flex",{'zIndex':0})}>
                     {!this.state.loading && (this.state.data.length > 0 ? 
-                        <VirtualizedList data={this.state.data} 
-                            renderItem={this.renderItem.bind(this)}/> : (
+                        <VirtualizedList data={this.state.data}
+                            renderItem={this.renderItem.bind(this)}
+                            keyExtractor={item => item.CodigoUsuario}/> : (
                                 <View style={_s("center-a center-b",{'height': 50})}>
                                     <Text>Nenhum resultado encontrado.</Text>
                                 </View>

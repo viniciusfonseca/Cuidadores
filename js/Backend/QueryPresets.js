@@ -4,6 +4,8 @@ export const PRESETS_ID = {
     RETRIEVE_USER:     "retrieve_user",
     AUTHENTICATION:    "authentication",
 
+    __DEBUG__PASS_RECOVERY: "PASS_RECOVERY",
+
     CUIDADORES:        "cuidadores",
     ESPECIALIDADES:    "especialidades",
     USER_VIEW:         "USER_VIEW",
@@ -71,6 +73,12 @@ const presets = [
         ]
     },
     {
+        "id": PRESETS_ID.__DEBUG__PASS_RECOVERY,
+        "base": `SELECT USUARIO.Senha FROM USUARIO WHERE Usuario.Email='<email>'`
+    },
+
+
+    {
         "id": PRESETS_ID.USER_VIEW,
         "base": `SELECT USUARIO.Nome AS Nome,
                     USUARIO.Telefone AS Telefone, 
@@ -81,14 +89,14 @@ const presets = [
                     THEN ''
                     WHEN Usuario.Tipo = 1 THEN '[' || (
                         SELECT
-                            GROUP_CONCAT('{' ||
-                                "'DescricaoEspecialidade"' || ':"' || ESPECIALIDADE.DescricaoEspecialidade || '"' ||
+                            GROUP_CONCAT('{' ||                                
+                                '"CodigoEspecialidade"'    || ':"' || ESPECIALIDADE.CodigoEspecialidade    || '"' || "," ||
+                                '"DescricaoEspecialidade"' || ':"' || ESPECIALIDADE.DescricaoEspecialidade || '"' ||
                             '}')
                         FROM ESPECIALIDADE
                         INNER JOIN CUIDADOR_ESPECIALIDADE
                             ON ESPECIALIDADE.CodigoEspecialidade = CUIDADOR_ESPECIALIDADE.CodigoEspecialidade
                         WHERE CUIDADOR_ESPECIALIDADE.CodigoUsuario = USUARIO.CodigoUsuario
-                        GROUP BY ESPECIALIDADE.CodigoEspecialidade
                     ) || ']' 
                     END AS Especialidades,
                     ---------------------------
@@ -96,21 +104,21 @@ const presets = [
                     THEN '[' || (
                         SELECT 
                             GROUP_CONCAT('{' ||
-                                '"CodigoDependente"' || ':"' || DEPENDENTE.CodigoDependente || '"' ||
+                                '"CodigoDependente"' || ':"' || DEPENDENTE.CodigoDependente || '"' || "," ||
                                 '"NomeDependente"'   || ':"' || DEPENDENTE.NomeDependente   || '"' ||
                             '}')
                         FROM DEPENDENTE
                         WHERE DEPENDENTE.CodigoUsuario = USUARIO.CodigoUsuario
                     ) || ']'
                     WHEN Usuario.Tipo = 1 THEN ''
-                    END AS Dependentes
+                    END AS Dependentes,
                     ---------------------------
-                    (
-                        SELECT '[' ||
+                    ( -- TODO: Contratos
+                        '[' /*||
                             GROUP_CONCAT('{' || 
-                                '"CodigoUsuario"' || ':"' || USUARIO.CodigoUsuario || '"' ||
+                                '"CodigoUsuario"' || ':"' || USUARIO.CodigoUsuario || '"' || "," ||
                                 '"Nome"'          || ':"' || USUARIO.Nome          || '"' ||
-                            '}')
+                            '}')*/ ||
                         ']'
                     ) AS Contratos
                 FROM USUARIO
@@ -165,6 +173,10 @@ const presets = [
                 SET 
                     NomeDependente = '<NomeDependente>'
                 WHERE DEPENDENTE.CodigoDependente = '<CodigoDependente>'`
+    },
+    {
+        id: PRESETS_ID.DELETE_DEPENDENTE,
+        base: `DELETE FROM DEPENDENTE WHERE DEPENDENTE.CodigoDependente = <CodigoDependente>`
     }
 ]
 export default presets

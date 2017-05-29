@@ -17,8 +17,8 @@ export default class User {
 
     static get USER_TYPE() {
         return {
-            CUIDADOR:    0x00,
-            RESPONSAVEL: 0x01
+            RESPONSAVEL: 0x00,
+            CUIDADOR:    0x01
         }
     }
 
@@ -127,12 +127,16 @@ export default class User {
     getCodigoUsuario() { return this.fields.CodigoUsuario }
 
     selfDecorate() {
+        if (typeof this.__specBind__ == "number") {
+            return
+        }
         switch (this.getCodigoUsuario()) {
             case User.USER_TYPE.RESPONSAVEL:
                 return ResponsavelDecorator(this)
             case User.USER_TYPE.CUIDADOR:
                 return CuidadorDecorator(this)
             default:
+                return
         }
     }
 }
@@ -170,6 +174,7 @@ export function ResponsavelDecorator( userContext ) {
         await userContext.db.fetchData(PRESETS_ID.DELETE_DEPENDENTE, {
             CodigoDependente
         })
+        return await userContext.obterDependentes()
     }
 
     return userContext
