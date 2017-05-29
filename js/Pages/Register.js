@@ -230,9 +230,10 @@ class Register extends React.Component {
             if (!(k in User.INITIAL_STATE)) {
                 continue
             }
-            v = v || ""
+            v = String(v) || ""
             v = v.trim()
             if (!v) {
+                Alert.alert(k, Register.FIELD_NAMES[k])
                 ToastAndroid.show("O seguinte campo está vazio: " + Register.FIELD_NAMES[k], ToastAndroid.SHORT)
                 return
             }
@@ -259,15 +260,16 @@ class Register extends React.Component {
             return
         }
         await this.props.db.fetchData(PRESETS_ID.CREATE_USER, userData)
+
         let dadosUsuarioBackend = (await this.props.db.fetchData(PRESETS_ID.RETRIEVE_USER, {
             email: userData.Email,
-            pass: userData.Senha
-        }))[0]
+            pass:  userData.Senha
+        })).rows[0]
         await this.props.user.write( dadosUsuarioBackend )
 
         this.setState({ registering: false })
         ToastAndroid.show("Cadastro realizado com sucesso", ToastAndroid.SHORT)
-        replaceState(this.props, Actions.PossibleRoutes.HOME_, {}, NavigationActions({
+        replaceState(this.props, Actions.PossibleRoutes.HOME_, {}, NavigationActions.navigate({
             routeName: Actions.PossibleRoutes.HOME.PROFILE,
             params: { CodigoUsuario: dadosUsuarioBackend.CodigoUsuario }
         }))
