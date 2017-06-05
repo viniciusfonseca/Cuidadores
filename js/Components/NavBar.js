@@ -37,3 +37,8 @@ const NavBar = props => (
   </LinearGradient>
 )
 export default NavBar
+
+export const NavBarShadow = props => (
+  <LinearGradient colors={['#AAA','transparent']}
+      style={{'position':'absolute','height':4,'width':'100%','bottom':-4,'left':0,'zIndex':9}} />
+)

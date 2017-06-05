@@ -37,7 +37,7 @@ const SidemenuOption = props => (
 
 const getLabelFromUserType = {
     '0': 'Procurar Cuidadores',
-    '1': 'Procurar Dependentes'
+    '1': 'Procurar Pacientes'
 }
 
 class Sidemenu extends React.Component {

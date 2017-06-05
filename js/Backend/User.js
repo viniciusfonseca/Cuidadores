@@ -38,6 +38,7 @@ export default class User {
 
     _status = User.STATUS.NOT_INITIATED
     db = null
+    __specBind__ = null
 
     fields = User.INITIAL_STATE
 
@@ -117,6 +118,7 @@ export default class User {
                 pass
             })).rows[0]
             // Alert.alert("data", JSON.stringify(userData))
+            this.setCodigoUsuario( userData.CodigoUsuario )
             await this.write(userData)
             return true
         } catch (e) {
@@ -125,6 +127,7 @@ export default class User {
     }
 
     getCodigoUsuario() { return this.fields.CodigoUsuario }
+    setCodigoUsuario( c ) { this.fields.CodigoUsuario = c }
 
     selfDecorate() {
         if (typeof this.__specBind__ == "number") {

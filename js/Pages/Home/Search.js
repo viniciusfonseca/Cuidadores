@@ -9,6 +9,7 @@ import ActionButton from 'react-native-action-button'
 import Icon from 'react-native-vector-icons/Entypo'
 import Modal from 'react-native-modal'
 import CheckBox from 'react-native-check-box'
+import { MaskService } from 'react-native-masked-text'
 
 import { connect } from 'react-redux'
 
@@ -145,7 +146,7 @@ class Search extends React.Component {
                         resizeMode="contain" />
                     <View style={_s("flex", { 'marginLeft':8 })}>
                             <Text>{item.Nome}</Text>
-                            <Text>{item.Telefone}</Text>
+                            <Text>{MaskService.toMask('cel-phone', item.Telefone, {})}</Text>
                     </View>
                 </View>
             </ImprovedTouchable>
@@ -168,13 +169,12 @@ class Search extends React.Component {
                 <NavBar enableNavBtn={true} navigation={this.props.navigation} />
                 <View style={_s("flex",{'zIndex':0})}>
                     {!this.state.loading && (this.state.data.length > 0 ? 
-                        <VirtualizedList data={this.state.data}
+                        (<VirtualizedList data={this.state.data}
                             renderItem={this.renderItem.bind(this)}
-                            keyExtractor={item => item.CodigoUsuario}/> : (
-                                <View style={_s("center-a center-b",{'height': 50})}>
-                                    <Text>Nenhum resultado encontrado.</Text>
-                                </View>
-                            )
+                            keyExtractor={item => item.CodigoUsuario}/>) : (
+                        <View style={_s("center-a center-b",{'height': 50})}>
+                            <Text>Nenhum resultado encontrado.</Text>
+                        </View>)
                         )
                     }
                     {this.state.loading &&

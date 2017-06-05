@@ -62,6 +62,7 @@ class Login extends React.Component {
         userService.authenticate(login, pass).then(isAuth => {
             this.setState({ auth: false })
             if (isAuth) {
+                Alert.alert("user", JSON.stringify( userService.fields ))
                 replaceState(this.props, Actions.PossibleRoutes.HOME_, {}, NavigationActions.navigate({
                     routeName: Actions.PossibleRoutes.HOME_,
                     params: {
