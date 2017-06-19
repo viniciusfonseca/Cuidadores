@@ -8,6 +8,8 @@ import {
 import { TabViewAnimated, TabBar, SceneMap } from 'react-native-tab-view'
 import LinearGradient from 'react-native-linear-gradient'
 import { MaskService } from 'react-native-masked-text'
+import Modal from 'react-native-modal'
+import CheckBox from 'react-native-check-box'
 
 import { PRESETS_ID } from '../../Backend/QueryPresets'
 import User from '../../Backend/User'
@@ -19,6 +21,22 @@ import _s, { PRIMARY_COLOR, SECONDARY_COLOR, TERTIARY_COLOR } from '../../Style'
 import NavBar, { NavBarShadow } from '../../Components/NavBar'
 import Button from '../../Components/Button'
 import ListItem from '../../Components/ListItem'
+
+import { noop } from '../../App'
+
+import { arrayToggleElement } from './Search'
+
+const FormTextField = props => (
+    <View style={_s("flex-stretch", { 'marginTop': 8 })}>
+        <Text>{this.props.label}</Text>
+        <TextInput
+            underlineColorAndroid="transparent"
+            style={_s("form-section", { 'padding': 0, 'marginBottom': this.props.last ? 8 : 0 })}
+            onChangeText={this.props.onChange || noop}
+            keyboardType="ascii-capable"
+            />
+    </View>
+)
 
 class Profile extends React.Component {
     static get upperSectionStyle() {
@@ -46,7 +64,8 @@ class Profile extends React.Component {
             index: 0,
             routes: [],
 
-            modalDependentesVisible: false
+            modalDependenteVisible:     false,
+            modalEspecialidadesVisible: false
         }
     }
 
@@ -63,8 +82,13 @@ class Profile extends React.Component {
             })).rows[0]
             this.user = Object.assign({}, this.user, dataUserBackend)
             parseFields.forEach(field => {
-                this.user[field] = this.user[field] || '[]'
-                this.user[field] = JSON.parse(this.user[field])
+                try {
+                    this.user[field] = this.user[field] || '[]'
+                    this.user[field] = JSON.parse(this.user[field])
+                }
+                catch(e) {
+                    this.user[field] = []
+                }
             })
             let routes = []
             switch (this.user.Tipo) {
@@ -98,14 +122,6 @@ class Profile extends React.Component {
         })()
     }
 
-    static get SUBVIEW_PROPS() {
-        return {
-            "Dependentes": {},
-            "Contratos": {},
-            "Especialidades": {}
-        }
-    }
-
     renderScene = ({ route }) => {
         let componentClass = null, key = ""
         switch (route.key) {
@@ -113,26 +129,99 @@ class Profile extends React.Component {
             case '2': componentClass = Contratos;      key = "Contratos";      break
             case '3': componentClass = Especialidades; key = "Especialidades"; break
         }
-        return React.createElement(componentClass, Object.assign({
-            value: this.user[ key ],
-            isVisitingOwnProfile: this.isVisitingOwnProfile
-        }, Profile.SUBVIEW_PROPS[ key ]))
+        const mkWrapper = (context, fnName) => context[ fnName ].bind( context )
+        return React.createElement(
+            componentClass,
+            Object.assign({
+                value: this.user[ key ],
+                isVisitingOwnProfile: this.isVisitingOwnProfile
+            }, (( context ) => {
+                switch (key) {
+                    case '1': return {
+                        showDependenteModal:       mkWrapper(context, 'showDependenteModal'),
+                        oferecerServicoDependente: mkWrapper(context, 'oferecerServicoDependente')
+                    }
+                    case '2': return {}
+                    case '3': return {
+                        showEspecialidadesModal:   mkWrapper(context, 'showEspecialidadesModal')
+                    }
+                }
+            })(this))
+        )
     }
 
     handleChangeTab = index => this.setState({ index })
 
-    renderDependentesModal() {
+/*
+    ************************************************************************************
+        TRATA EVENTOS DAS SUBVIEWS
+    ************************************************************************************
+*/
+
+    showDependenteModal() { this.setState({ modalDependenteVisible: true }) }
+
+    oferecerServicoDependente() {
+        Alert.alert("Oferecer Serviço", "Deseja oferecer serviço a este dependente?", [
+            {
+                text: 'Não',
+                onPress: noop
+            },
+            {
+                text: 'Sim',
+                onPress: () => replaceState({
+                    navigation: this.props.parentNavigation
+                }, Actions.PossibleRoutes.LOGIN)
+            }
+        ])
+    }
+
+    showEspecialidadesModal() { this.setState({ modalEspecialidadesVisible: true }) }
+
+/*
+    ************************************************************************************
+        FIM TRATAMENTO DE EVENTOS
+    ************************************************************************************
+*/
+
+
+
+    renderDependenteModal() {
         return (
             <Modal 
-                isVisible={this.state.modalDependentesVisible} 
+                isVisible={this.state.modalDependenteVisible} 
                 animationIn="fadeInUp" 
                 animationOut="fadeOutDown">
                 <View style={_s("flex blank", { 'borderRadius': 9, 'margin': 12 })}>
                     <View style={_s("subheader flex-stretch flex-row", { 'borderTopLeftRadius': 9, 'borderTopRightRadius': 9, 'padding': 0 })}>
                         <View style={_s("flex flex-row center-b",{'paddingLeft': 8})}>
-                            <Text style={{ 'fontWeight': 'bold', 'fontSize': 16 }}>Filtrar resultados</Text>
+                            <Text style={{ 'fontWeight': 'bold', 'fontSize': 16 }}>Selecionar Especialidades</Text>
                         </View>
-                        <ImprovedTouchable onPress={() => this.setState({ modalVisible: false })}>
+                        <ImprovedTouchable onPress={() => this.setState({ modalDependenteVisible: false })}>
+                            <View style={_s("center-a center-b",{'width':50, 'height':'100%',})}>
+                                <Icon name="circle-with-cross" style={{'fontSize':26,'color':'#000',}} />
+                            </View>
+                        </ImprovedTouchable>
+                    </View>
+
+                    
+                </View>
+            </Modal>
+        )
+    }
+
+    renderEspecialidadesModal( context = {} ) {
+        const especialidades = Object.assign([], this.user.Especialidades)
+        return (
+            <Modal
+                isVisible={this.state.modalEspecialidadesVisible} 
+                animationIn="fadeInUp" 
+                animationOut="fadeOutDown">
+                <View style={_s("flex blank", { 'borderRadius': 9, 'margin': 12 })}>
+                    <View style={_s("subheader flex-stretch flex-row", { 'borderTopLeftRadius': 9, 'borderTopRightRadius': 9, 'padding': 0 })}>
+                        <View style={_s("flex flex-row center-b",{'paddingLeft': 8})}>
+                            <Text style={{ 'fontWeight': 'bold', 'fontSize': 16 }}>{ !context.NomeDependente? 'Novo Dependente' : 'Editar Dependente' }</Text>
+                        </View>
+                        <ImprovedTouchable onPress={() => this.setState({ modalEspecialidadesVisible: false })}>
                             <View style={_s("center-a center-b",{'width':50, 'height':'100%',})}>
                                 <Icon name="circle-with-cross" style={{'fontSize':26,'color':'#000',}} />
                             </View>
@@ -166,8 +255,19 @@ class Profile extends React.Component {
     render() {
         let user = this.user
         // Alert.alert("user", JSON.stringify( user ))
+        
+        /*<View style={{marginTop:6}}>
+            <Button label="Editar perfil" />
+        </View>*/
+        /*<View style={{marginTop:6}}>
+            <Button label="Oferecer serviço" />
+        </View>*/
+
         return (
             <View style={_s("flex blank")}>
+                { this.isVisitingOwnProfile && this.user.Tipo == User.USER_TYPE.RESPONSAVEL && this.renderDependenteModal.call(this) }
+                { this.isVisitingOwnProfile && this.user.Tipo == User.USER_TYPE.CUIDADOR    && this.renderEspecialidadesModal.call(this) }
+                
                 <NavBar
                     enableBackBtn={this.asStack}
                     enableNavBtn={!this.asStack}
@@ -191,17 +291,11 @@ class Profile extends React.Component {
                                 <Text style={{marginVertical: 2}}>{user.Localizacao}</Text>
                                 <Text>Telefone: {MaskService.toMask('cel-phone', user.Telefone, {})}</Text>
                                 {this.isVisitingOwnProfile? (
-                                    <View style={{marginTop:6}}>
-                                        <Button label="Editar perfil" />
-                                    </View>
+                                    <View />
                                 ): (() => {
                                     switch (this.user.Tipo) {
                                         case User.USER_TYPE.RESPONSAVEL:
-                                            return (
-                                                <View style={{marginTop:6}}>
-                                                    <Button label="Oferecer serviço" />
-                                                </View>
-                                            )
+                                            return <View />
                                         case User.USER_TYPE.CUIDADOR:
                                             return (
                                                 <View style={{marginTop:6}}>
@@ -230,6 +324,11 @@ class Profile extends React.Component {
     }
 }
 
+/*
+    ************************************************************************************
+        SUBVIEW DE DEPENDENTES
+    ************************************************************************************
+*/
 class Dependentes extends React.Component {
     constructor(props) {
         super(props)
@@ -239,9 +338,11 @@ class Dependentes extends React.Component {
         return this.props.value.length == 0? (
             <View style={_s("center-a center-b", {height: 85})}>
                 <Text style={{'textAlign':'center'}}>Você ainda não possui um dependente.</Text>
-                <Text style={{'textDecorationLine':'underline','marginTop':5}}>
-                    Clique para adicionar um dependente
-                </Text>
+                <TouchableWithoutFeedback onPress={ this.props.showDependenteModal }>
+                    <Text style={{'textDecorationLine':'underline','marginTop':5}}>
+                        Clique para adicionar um dependente
+                    </Text>
+                </TouchableWithoutFeedback>
             </View>
         ): (
             <ScrollView>
@@ -273,6 +374,11 @@ class Contratos extends React.Component {
     }
 }
 
+/*
+    ************************************************************************************
+        SUBVIEW DE ESPECIALIDADES
+    ************************************************************************************
+*/
 class Especialidades extends React.Component {
     renderItem({ item }) {
         return <ListItem label={item.DescricaoEspecialidade} />
@@ -283,9 +389,11 @@ class Especialidades extends React.Component {
             this.props.isVisitingOwnProfile ? (
                 <View style={_s("center-a center-b", {height: 85})}>
                     <Text style={{textAlign:'center'}}>Você ainda não possui uma especialidade.</Text>
-                    <Text style={{'textDecorationLine':'underline','marginTop':5}}>
-                        Clique para adicionar uma especialidade
-                    </Text>
+                    <TouchableWithoutFeedback onPress={ this.props.showEspecialidadesModal }>
+                        <Text style={{'textDecorationLine':'underline','marginTop':5}}>
+                            Clique para adicionar uma especialidade
+                        </Text>
+                    </TouchableWithoutFeedback>
                 </View>
             ) : (
                 <View style={_s("center-a center-b", {height: 85})}>
@@ -294,6 +402,11 @@ class Especialidades extends React.Component {
             )
         ) : (
             <View style={_s("flex", {paddingHorizontal:12})}>
+                <TouchableWithoutFeedback onPress={ this.props.showEspecialidadesModal }>
+                    <Text style={{'textDecorationLine':'underline','marginTop':5}}>
+                        Clique para adicionar uma especialidade
+                    </Text>
+                </TouchableWithoutFeedback>
                 <FlatList
                     data={this.props.value}
                     renderItem={this.renderItem.bind(this)}

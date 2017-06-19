@@ -22,7 +22,7 @@ import NavBar from '../../Components/NavBar'
 import ImprovedTouchable from '../../Components/ImprovedTouchable'
 import Button from '../../Components/Button'
 
-function arrayToggleElement(array, element) {
+export function arrayToggleElement(array, element) {
     if (!array.includes(element)) {
         array.push(element)
     }
@@ -58,7 +58,7 @@ class Search extends React.Component {
             this.especialidades = res.rows
         }
         catch(e) {
-            Alert.alert("ERR", e.message)
+            Alert.alert("ERR1", e.message)
         }
     }
 
@@ -77,7 +77,7 @@ class Search extends React.Component {
             })
         }
         catch (e) {
-            Alert.alert("ERR", e.message)
+            Alert.alert("ERR2", e.stack)
         }
     }
 
@@ -146,7 +146,7 @@ class Search extends React.Component {
                         resizeMode="contain" />
                     <View style={_s("flex", { 'marginLeft':8 })}>
                             <Text>{item.Nome}</Text>
-                            <Text>{MaskService.toMask('cel-phone', item.Telefone, {})}</Text>
+                            <Text>{MaskService.toMask('cel-phone', (item.Telefone || ""), {})}</Text>
                     </View>
                 </View>
             </ImprovedTouchable>
@@ -171,6 +171,8 @@ class Search extends React.Component {
                     {!this.state.loading && (this.state.data.length > 0 ? 
                         (<VirtualizedList data={this.state.data}
                             renderItem={this.renderItem.bind(this)}
+                            getItem={(items, index) => items[index]}
+                            getItemCount={items => items.length}
                             keyExtractor={item => item.CodigoUsuario}/>) : (
                         <View style={_s("center-a center-b",{'height': 50})}>
                             <Text>Nenhum resultado encontrado.</Text>
