@@ -120,6 +120,7 @@ export default class User {
             // Alert.alert("data", JSON.stringify(userData))
             this.setCodigoUsuario( userData.CodigoUsuario )
             await this.write(userData)
+            this.selfDecorate()
             return true
         } catch (e) {
             throw e
@@ -148,9 +149,9 @@ export function ResponsavelDecorator( userContext ) {
     userContext.__specBind__ = User.USER_TYPE.RESPONSAVEL
 
     userContext.obterDependentes = async() => {
-        return await userContext.db.fetchData(PRESETS_ID.DEPENDENTES, {
+        return (await userContext.db.fetchData(PRESETS_ID.DEPENDENTES, {
             CodigoUsuario: userContext.getCodigoUsuario()
-        })
+        })).rows[0]
     }
 
     userContext.criarDependente = async({ NomeDependente }) => {

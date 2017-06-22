@@ -47,6 +47,7 @@ class Search extends React.Component {
     }
 
     componentDidMount() {
+        if (this.props.user.Tipo)
         this.buscaEspecialidades()
         this.fetchData({})
     }
@@ -55,6 +56,17 @@ class Search extends React.Component {
         let res = null
         try {
             res = await this.props.db.fetchData(PRESETS_ID.ESPECIALIDADES)
+            this.especialidades = res.rows
+        }
+        catch(e) {
+            Alert.alert("ERR1", e.message)
+        }
+    }
+
+    buscaNecessidades = async() => {
+        let res = null
+        try {
+            res = await this.props.db.fetchData(PRESETS_ID.NECESSIDADES)
             this.especialidades = res.rows
         }
         catch(e) {
@@ -197,6 +209,7 @@ class Search extends React.Component {
 
 const mapStateToProps = state => ({
     db: state.db,
+    user: state.user,
     parentNavigation: state.navigation
 })
 const SearchPage = connect(mapStateToProps)(Search)
