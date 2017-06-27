@@ -134,13 +134,13 @@ export default class User {
         if (typeof this.__specBind__ == "number") {
             return
         }
-        switch (this.getCodigoUsuario()) {
+        switch (this.fields.Tipo) {
             case User.USER_TYPE.RESPONSAVEL:
                 return ResponsavelDecorator(this)
             case User.USER_TYPE.CUIDADOR:
                 return CuidadorDecorator(this)
             default:
-                return
+                return this
         }
     }
 }
@@ -151,10 +151,10 @@ export function ResponsavelDecorator( userContext ) {
     userContext.obterDependentes = async() => {
         return (await userContext.db.fetchData(PRESETS_ID.DEPENDENTES, {
             CodigoUsuario: userContext.getCodigoUsuario()
-        })).rows[0]
+        })).rows
     }
 
-    userContext.criarDependente = async({ NomeDependente }) => {
+    userContext.criarDependente = async({ NomeDependente, Observacao }) => {
         await userContext.db.fetchData(PRESETS_ID.CREATE_DEPENDENTE, {
             NomeDependente
         })
@@ -187,6 +187,24 @@ export function ResponsavelDecorator( userContext ) {
 export function CuidadorDecorator( userContext ) {
 
     userContext.__specBind__ = User.USER_TYPE.CUIDADOR
+
+    userContext.adicionarEspecialidade = async({
+        CodigoEspecialidade
+    }) => {
+        return await userContext.db.fetchData(PRESETS_ID.ADD_ESPECIALIDADE, Object.assign({
+            CodigoUsuario: userContext.getCodigoUsuario(),
+            CodigoEspecialidade
+        }))
+    }
+
+    userContext.removerEspecialidade = async({
+        CodigoEspecialidade
+    }) => {
+        return await userContext.db.fetchData(PRESETS_ID.REMOVE_ESPECIALIDADE, Object.assign({
+            CodigoUsuario: userContext.getCodigoUsuario(),
+            CodigoEspecialidade
+        }))
+    }
 
     return userContext
 }

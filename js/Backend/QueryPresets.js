@@ -1,19 +1,22 @@
 export const PRESETS_ID = {
-    USER_EXISTS:       "user_exists",
-    CREATE_USER:       "create_user",
-    RETRIEVE_USER:     "retrieve_user",
-    AUTHENTICATION:    "authentication",
+    USER_EXISTS:          "user_exists",
+    CREATE_USER:          "create_user",
+    RETRIEVE_USER:        "retrieve_user",
+    AUTHENTICATION:       "authentication",
 
     __DEBUG__PASS_RECOVERY: "PASS_RECOVERY",
 
-    CUIDADORES:        "cuidadores",
-    ESPECIALIDADES:    "especialidades",
-    USER_VIEW:         "USER_VIEW",
+    CUIDADORES:           "cuidadores",
+    ESPECIALIDADES:       "especialidades",
+    USER_VIEW:            "USER_VIEW",
 
-    DEPENDENTES:       "DEPENDENTES",
-    CREATE_DEPENDENTE: "CREATE_DEPENDENTE",
-    UPDATE_DEPENDENTE: "UPDATE_DEPENDENTE",
-    DELETE_DEPENDENTE: "DELETE_DEPENDENTE"
+    DEPENDENTES:          "DEPENDENTES",
+    CREATE_DEPENDENTE:    "CREATE_DEPENDENTE",
+    UPDATE_DEPENDENTE:    "UPDATE_DEPENDENTE",
+    DELETE_DEPENDENTE:    "DELETE_DEPENDENTE",
+
+    ADD_ESPECIALIDADE:    "ADD_ESPECIALIDADE",
+    REMOVE_ESPECIALIDADE: "REMOVE_ESPECIALIDADE"
 
 }
 const presets = [
@@ -104,11 +107,16 @@ const presets = [
                     THEN '[' || (
                         SELECT 
                             GROUP_CONCAT('{' ||
-                                '"CodigoDependente"' || ':"' || DEPENDENTE.CodigoDependente || '"' || "," ||
-                                '"NomeDependente"'   || ':"' || DEPENDENTE.NomeDependente   || '"' ||
+                                '"CodigoDependente"' || ':"' || DEPENDENTES.CodigoDependente || '"' || "," ||
+                                '"NomeDependente"'   || ':"' || DEPENDENTES.NomeDependente   || '"' ||
                             '}')
-                        FROM DEPENDENTE
-                        WHERE DEPENDENTE.CodigoUsuario = USUARIO.CodigoUsuario
+                        FROM (
+                            SELECT DEPENDENTE.CodigoDependente,
+                                DEPENDENTE.NomeDependente
+                            FROM DEPENDENTE
+                            WHERE DEPENDENTE.CodigoUsuario = USUARIO.CodigoUsuario
+                            ORDER BY DEPENDENTE.CodigoDependente DESC
+                        ) AS DEPENDENTES
                     ) || ']'
                     WHEN Usuario.Tipo = 1 THEN ''
                     END AS Dependentes,
@@ -156,7 +164,9 @@ const presets = [
         base: `SELECT DEPENDENTE.CodigoDependente,
                     DEPENDENTE.NomeDependente
                 FROM DEPENDENTE
-                WHERE DEPENDENTE.CodigoUsuario = <CodigoUsuario>`
+                WHERE DEPENDENTE.CodigoUsuario = <CodigoUsuario>
+                    AND DEPENDENTE.NomeDependente <> ''
+                ORDER BY DEPENDENTE.CodigoDependente DESC`
     },
     {
         id: PRESETS_ID.CREATE_DEPENDENTE,
@@ -177,6 +187,18 @@ const presets = [
     {
         id: PRESETS_ID.DELETE_DEPENDENTE,
         base: `DELETE FROM DEPENDENTE WHERE DEPENDENTE.CodigoDependente = <CodigoDependente>`
+    },
+
+    {
+        id: PRESETS_ID.ADD_ESPECIALIDADE,
+        base: `INSERT OR REPLACE INTO CUIDADOR_ESPECIALIDADE (CodigoUsuario, CodigoEspecialidade)
+                VALUES (<CodigoUsuario>, <CodigoEspecialidade>)`
+    },
+    {
+        id: PRESETS_ID.REMOVE_ESPECIALIDADE,
+        base: `DELETE FROM CUIDADOR_ESPECIALDIADE
+                WHERE CUIDADOR_ESPECIALIDADE.CodigoUsuario = <CodigoUsuario>
+                    AND CUIDADOR_ESPECIALIDADE.CodigoEspecialidade = <CodigoEspecialidade>`
     }
 ]
 export default presets

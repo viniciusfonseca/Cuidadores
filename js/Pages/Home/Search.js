@@ -18,6 +18,8 @@ import { navigateTo } from '../../App'
 import * as Actions from '../../Actions'
 
 import { PRESETS_ID } from '../../Backend/QueryPresets'
+import User from '../../Backend/User'
+
 import NavBar from '../../Components/NavBar'
 import ImprovedTouchable from '../../Components/ImprovedTouchable'
 import Button from '../../Components/Button'
@@ -47,8 +49,12 @@ class Search extends React.Component {
     }
 
     componentDidMount() {
-        if (this.props.user.Tipo)
-        this.buscaEspecialidades()
+        // if (this.props.user.fields.Tipo === User.USER_TYPE.RESPONSAVEL) {
+            this.buscaEspecialidades()
+        // }
+        // else {
+        //     this.buscaNecessidades()
+        // }
         this.fetchData({})
     }
 
@@ -121,8 +127,8 @@ class Search extends React.Component {
                         {
                             this.especialidades.map(especPtr => (
                                 <CheckBox
-                                    key={especPtr.CodigoEspecialidade}
-                                    style={{flex: 1, padding: 10}}
+                                    key={'se-'+especPtr.CodigoEspecialidade}
+                                    style={{flex: 1, padding: 10, borderBottomWidth:1, borderColor: '#DEDEDE'}}
                                     onClick={()=> {
                                         arrayToggleElement(
                                             this.filters.especialidades,
@@ -132,7 +138,7 @@ class Search extends React.Component {
                                     leftText={especPtr.DescricaoEspecialidade}/> )
                             )
                         }
-                        <Button label="Aplicar filtros" onPress={this.applyFilters.bind(this)} />
+                        <Button label="Aplicar filtros" onPress={this.applyFilters.bind(this)} style={{marginTop:10}} />
                     </ScrollView>
                 </View>
             </Modal>
