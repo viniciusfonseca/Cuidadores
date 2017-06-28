@@ -48,6 +48,22 @@ export default class Database {
         }
     }
 
+    run = async sql => {
+        try {
+            // Alert.alert("query",q)
+            let [qResult] = await this._dbPtr.executeSql(sql)
+            let rows = []
+            for (let i = 0; i < qResult.rows.length; i++) {
+                rows.push(qResult.rows.item(i))
+            }
+            return new DatabaseResult(DatabaseResult.STATUS.OK, rows)
+        }
+        catch (e) {
+            // Alert.alert("ERR", e.message)
+            throw new DatabaseResult(DatabaseResult.STATUS.QUERY_ERROR, e)
+        }
+    }
+
     fetchData = async(queryKey, params) => {
         let preset = presets.find(preset => preset.id === queryKey)
         if (!preset) {
@@ -78,18 +94,19 @@ export default class Database {
             }
             return filterCfg.SQL.replace(/<\?>/g, params[sub] || "")
         })
-        try {
-            // Alert.alert("query",q)
-            let [qResult] = await this._dbPtr.executeSql(q)
-            let rows = []
-            for (let i = 0; i < qResult.rows.length; i++) {
-                rows.push(qResult.rows.item(i))
-            }
-            return new DatabaseResult(DatabaseResult.STATUS.OK, rows)
-        }
-        catch (e) {
-            // Alert.alert("ERR", e.message)
-            throw new DatabaseResult(DatabaseResult.STATUS.QUERY_ERROR, e)
-        }
+        // try {
+        //     // Alert.alert("query",q)
+        //     let [qResult] = await this._dbPtr.executeSql(q)
+        //     let rows = []
+        //     for (let i = 0; i < qResult.rows.length; i++) {
+        //         rows.push(qResult.rows.item(i))
+        //     }
+        //     return new DatabaseResult(DatabaseResult.STATUS.OK, rows)
+        // }
+        // catch (e) {
+        //     // Alert.alert("ERR", e.message)
+        //     throw new DatabaseResult(DatabaseResult.STATUS.QUERY_ERROR, e)
+        // }
+        return await this.run(q)
     }
 }

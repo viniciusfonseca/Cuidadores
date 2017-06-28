@@ -145,6 +145,49 @@ export default class User {
     }
 }
 
+const getDiffsProcedimentos = (procedimentosA, procedimentosB) => {
+    let kA, kB
+    let diffs = []
+
+    procedimentosA = procedimentosA.slice().sort((pA, pB) => {
+        if (pA.CodigoProcedimento <  pB.CodigoProcedimento) return -1
+        if (pA.CodigoProcedimento == pB.CodigoProcedimento) return 0
+        return 1
+    })
+    procedimentosB = procedimentosB.slice().sort((pA, pB) => {
+        if (pA.CodigoProcedimento <  pB.CodigoProcedimento) return -1
+        if (pA.CodigoProcedimento == pB.CodigoProcedimento) return 0
+        return 1
+    })
+
+    let cA = procedimentosA.map(p => [ p.CodigoProcedimento || -1, p ])
+    let cB = procedimentosB.map(p => [ p.CodigoProcedimento || -1, p ])
+
+    const avancaA = () => kA = cA.shift()
+    const avancaB = () => kB = cB.shift()
+
+    avancaA()
+    avancaB()
+
+    do {
+        if (kB[0] == -1 || kA[0] > kB[0]) {
+            diffs.push([ 'I', kB, kB[1] ])
+            avancaB()
+        }
+        else if (kA[0] == kB[0]) {
+            diffs.push([ 'U', kA, kB[1] ])
+            avancaA()
+            avancaB()
+        }
+        else {
+            diffs.push([ 'D', kA, null  ])
+            avancaA()
+        }
+    } while (procedimentosA.length && procedimentosB.length)
+
+    return diffs
+}
+
 export function ResponsavelDecorator( userContext ) {
     userContext.__specBind__ = User.USER_TYPE.RESPONSAVEL
 
@@ -156,19 +199,44 @@ export function ResponsavelDecorator( userContext ) {
 
     userContext.criarDependente = async({ NomeDependente, Observacao }) => {
         await userContext.db.fetchData(PRESETS_ID.CREATE_DEPENDENTE, {
-            NomeDependente
+            NomeDependente, Observacao
         })
         return await userContext.obterDependentes()
     }
 
     userContext.atualizarDependente = async({
         CodigoDependente,
-        NomeDependente
-    }) => {
+        NomeDependente,
+        Procedimentos
+    }, procedimentosAnteriores) => {
+        let batchSQL = getDiffs(procedimentosAnteriores, Procedimentos)
+            .map(([ op, CodigoProcedimento, Procedimento ]) => {
+                switch (op) {
+                    case 'I':
+                        return `INSERT INTO PROCEDIMENTO (
+                            NomeMedico, DescricaoProcedimento, CodigoDependente
+                        ) VALUES (
+                            '${Procedimento.NomeMedico}',
+                            '${Procedimento.DescricaoProcedimento}',
+                             ${CodigoDependente}
+                        );`
+                    case 'U':
+                        return `UPDATE PROCEDIMENTO SET
+                            NomeMedico='${Procedimento.NomeMedico}',
+                            DescricaoProcedimento='${Procedimento.DescricaoProcedimento}'
+                            WHERE PROCEDIMENTO.CodigoProcedimento=${CodigoProcedimento};`
+                    case 'D':
+                        return `DELETE FROM PROCEDIMENTO 
+                            WHERE PROCEDIMENTO.CodigoProcedimento=${CodigoProcedimento};`
+                    default:
+                        return ""
+                }
+            }).join('')
         await userContext.db.fetchData(PRESETS_ID.UPDATE_DEPENDENTE, {
             CodigoDependente,
             NomeDependente
         })
+        await userContext.db.run( batchSQL )
         return await userContext.obterDependentes()
     }
 
@@ -180,7 +248,6 @@ export function ResponsavelDecorator( userContext ) {
         })
         return await userContext.obterDependentes()
     }
-
     return userContext
 }
 

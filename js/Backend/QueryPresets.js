@@ -108,13 +108,23 @@ const presets = [
                         SELECT 
                             GROUP_CONCAT('{' ||
                                 '"CodigoDependente"' || ':"' || DEPENDENTES.CodigoDependente || '"' || "," ||
-                                '"NomeDependente"'   || ':"' || DEPENDENTES.NomeDependente   || '"' ||
+                                '"NomeDependente"'   || ':"' || DEPENDENTES.NomeDependente   || '"' || "," ||
+                                '"Observacoes"'      || ':"' || DEPENDENTES.Observacoes      || '"' || "," ||
+                                '"Procedimentos"'    || ':[' || DEPENDENTES.Procedimentos    || ']' ||
                             '}')
                         FROM (
                             SELECT DEPENDENTE.CodigoDependente,
-                                DEPENDENTE.NomeDependente
+                                DEPENDENTE.NomeDependente,
+                                GROUP_CONCAT('{' ||
+                                    '"CodigoProcedimento"'    || ':"' || PROCEDIMENTO.CodigoProcedimento    || '"' || "," ||
+                                    '"NomeMedico"'            || ':"' || PROCEDIMENTO.NomeMedico            || '"' || "," ||
+                                    '"DescricaoProcedimento"' || ':"' || PROCEDIMENTO.DescricaoProcedimento || '"' ||
+                                '}')
                             FROM DEPENDENTE
+                            INNER JOIN PROCEDIMENTO
+                                ON PROCEDIMENTO.CodigoDependente = DEPENDENTE.CodigoDependente
                             WHERE DEPENDENTE.CodigoUsuario = USUARIO.CodigoUsuario
+                            GROUP BY DEPENDENTE.CodigoDependente
                             ORDER BY DEPENDENTE.CodigoDependente DESC
                         ) AS DEPENDENTES
                     ) || ']'
@@ -171,10 +181,10 @@ const presets = [
     {
         id: PRESETS_ID.CREATE_DEPENDENTE,
         base: `INSERT INTO DEPENDENTE(
-            NomeDependente, CodigoUsuario
+            NomeDependente, CodigoUsuario, Observacao
         )
         VALUES (
-            '<NomeDependente>', <CodigoUsuario>
+            '<NomeDependente>', <CodigoUsuario>, '<Observacao>'
         )`
     },
     {
@@ -188,7 +198,6 @@ const presets = [
         id: PRESETS_ID.DELETE_DEPENDENTE,
         base: `DELETE FROM DEPENDENTE WHERE DEPENDENTE.CodigoDependente = <CodigoDependente>`
     },
-
     {
         id: PRESETS_ID.ADD_ESPECIALIDADE,
         base: `INSERT OR REPLACE INTO CUIDADOR_ESPECIALIDADE (CodigoUsuario, CodigoEspecialidade)

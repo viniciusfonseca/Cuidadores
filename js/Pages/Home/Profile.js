@@ -226,7 +226,7 @@ class Profile extends React.Component {
     ************************************************************************************
 */
 
-    concluiDependenteModal = async contextoDependente => {
+    concluiDependenteModal = async (contextoDependente, procedimentosAnteriores) => {
         // Alert.alert("user", Object.keys(this.props.user).toString())
         if (!contextoDependente.NomeDependente.trim()) {
             ToastAndroid.show("Necessário preencher nome do dependente", ToastAndroid.SHORT)
@@ -251,10 +251,22 @@ class Profile extends React.Component {
         }, this.reload.bind(this))
     }
 
+    // ##1
     renderDependenteModal() {
         let contextoDependente = Object.assign({}, this.state.contextoDependente)
+        let procedimentosAnteriores = this.state.contextoDependente.Procedimentos.slice()
+        let Procedimentos = procedimentosAnteriores.map(p => Object.assign({}, p))
         // Alert.alert("DEP", JSON.stringify( contextoDependente ))
         let criandoDependente = !contextoDependente.CodigoDependente
+
+        const adicionaProcedimento = () => {
+            Procedimentos.push({})
+            this.forceUpdate()
+        }
+        const apagaProcedimento = contextoProcedimento => {
+            Procedimentos = Procedimentos.filter(p => p !== contextoProcedimento)
+            this.forceUpdate()
+        }
         return (
             <Modal 
                 isVisible={this.state.modalDependenteVisible}
@@ -263,7 +275,9 @@ class Profile extends React.Component {
                 <View style={_s("flex blank", { 'borderRadius': 9, 'margin': 12 })}>
                     <View style={_s("subheader flex-stretch flex-row", { 'borderTopLeftRadius': 9, 'borderTopRightRadius': 9, 'padding': 0 })}>
                         <View style={_s("flex flex-row center-b",{'paddingLeft': 8})}>
-                            <Text style={{ 'fontWeight': 'bold', 'fontSize': 16 }}>{criandoDependente? 'Criar Dependente': 'Editar Dependente'}</Text>
+                            <Text style={{ 'fontWeight': 'bold', 'fontSize': 16 }}>{
+                                criandoDependente? 'Criar Dependente': 'Editar Dependente'
+                            }</Text>
                         </View>
                         <ImprovedTouchable onPress={() => this.setState({ modalDependenteVisible: false })}>
                             <View style={_s("center-a center-b",{'width':50, 'height':'100%',})}>
@@ -280,9 +294,43 @@ class Profile extends React.Component {
                             label="Observações" last={true}
                             defaultValue={contextoDependente.Observacoes}
                             onChange={val => contextoDependente.Observacoes = val} />
+
+                        <ImprovedTouchable onPress={ adicionaProcedimento }>
+                            <View style={_s("flex-row center-b",{borderBottomWidth:1,borderColor:'#DEDEDE'})}>
+                                <Text style={{'textDecorationLine':'underline','paddingVertical':15,'marginLeft':10,'flex':1}}>
+                                    Adicionar um procedimento
+                                </Text>
+                                <Icon name="plus" style={{'fontSize':26,'color':'#000',}} />
+                            </View>
+                        </ImprovedTouchable>
+                        {
+                            Procedimentos.map(p => (
+                                <ListItem key={'d-'+item.CodigoDependente}
+                                    onPress={() => this.props.showDependenteModal( item )}>
+                                    <View style={{ alignSelf: 'stretch' }}>
+                                        <FormTextField
+                                            label="Nome do Médico" last={true}
+                                            defaultValue={p.NomeMedico}
+                                            onChange={val => p.NomeMedico = val} />
+                                        <FormTextField
+                                            label="Descrição do Procedimento" last={true}
+                                            defaultValue={contextoDependente.Observacoes}
+                                            onChange={val => contextoDependente.Observacoes = val} />
+                                    </View>
+                                    <ImprovedTouchable onPress={() => apagaProcedimento( item )}>
+                                        <View>
+                                            <Icon name="circle-with-cross" style={{'fontSize':26,'color':'#000',}} />
+                                        </View>
+                                    </ImprovedTouchable>
+                                </ListItem>
+                            ))
+                        }
                         <Button
                             label={criandoDependente? 'Criar Dependente': 'Aplicar mudanças'}
-                            onPress={this.concluiDependenteModal.bind(this, contextoDependente)} />
+                            onPress={() => {
+                                contextoDependente.Procedimentos = Procedimentos
+                                this.concluiDependenteModal( contextoDependente, procedimentosAnteriores )
+                            }} />
                     </ScrollView>
                 </View>
             </Modal>
