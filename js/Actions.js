@@ -23,7 +23,8 @@ export const PossibleRoutes = {
     HOME_: 'HOME',
     HOME: {
         SEARCH: 'HOME.SEARCH',
-        PROFILE: 'HOME.PROFILE'
+        PROFILE: 'HOME.PROFILE',
+        PROCEDURES: 'HOME.PROCEDURES'
     },
     PROFILE_VIEW: 'PROFILE_VIEW'
 }

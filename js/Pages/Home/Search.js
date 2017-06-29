@@ -21,6 +21,7 @@ import { PRESETS_ID } from '../../Backend/QueryPresets'
 import User from '../../Backend/User'
 
 import NavBar from '../../Components/NavBar'
+import SubHeader from '../../Components/SubHeader'
 import ImprovedTouchable from '../../Components/ImprovedTouchable'
 import Button from '../../Components/Button'
 
@@ -185,6 +186,7 @@ class Search extends React.Component {
             <View style={_s("flex blank")}>
                 {this.renderFilterModal.call(this)}
                 <NavBar enableNavBtn={true} navigation={this.props.navigation} />
+                <SubHeader label="BUSCAR CUIDADORES" />
                 <View style={_s("flex",{'zIndex':0})}>
                     {!this.state.loading && (this.state.data.length > 0 ? 
                         (<VirtualizedList data={this.state.data}

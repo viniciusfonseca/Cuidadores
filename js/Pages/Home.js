@@ -19,6 +19,7 @@ import ImprovedTouchable from '../Components/ImprovedTouchable'
 
 import SearchPage from './Home/Search'
 import ProfilePage from './Home/Profile'
+import ProceduresPage from './Home/Procedures'
 
 import _s, { gradientC } from '../Style'
 
@@ -76,6 +77,10 @@ class Sidemenu extends React.Component {
                         label="Meu Perfil" 
                         navigateTo={Actions.PossibleRoutes.HOME.PROFILE} 
                         navigation={this.props.navigation} />
+                    <SidemenuOption icon="list"
+                        label="Procedimentos" 
+                        navigateTo={Actions.PossibleRoutes.HOME.PROCEDURES} 
+                        navigation={this.props.navigation} />
                     <SidemenuOption icon="log-out"
                         label="Sair"
                         onPress={this.promptUserLogout.bind(this)}/>
@@ -97,6 +102,9 @@ const HomePage = DrawerNavigator({
    },
    [Actions.PossibleRoutes.HOME.PROFILE]: {
        screen: ProfilePage
+   },
+   [Actions.PossibleRoutes.HOME.PROCEDURES]: {
+       screen: ProceduresPage
    }
 }, {
     drawerWidth: 255,

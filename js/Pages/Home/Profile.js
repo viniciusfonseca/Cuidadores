@@ -96,6 +96,7 @@ class Profile extends React.Component {
         let dataUserBackend = (await this.props.db.fetchData(PRESETS_ID.USER_VIEW, {
             CodigoUsuario: this.user.CodigoUsuario
         })).rows[0]
+        // Alert.alert("user", JSON.stringify( dataUserBackend ))
         this.user = Object.assign({}, this.user, dataUserBackend)
         parseFields.forEach(field => {
             try {
@@ -106,6 +107,7 @@ class Profile extends React.Component {
                 this.user[field] = []
             }
         })
+
         let routes = []
         switch (this.user.Tipo) {
             case User.USER_TYPE.RESPONSAVEL:
@@ -180,9 +182,10 @@ class Profile extends React.Component {
 */
 
     showDependenteModal( item ) {
+        this.procedimentosAnteriores = null
         this.setState({
             modalDependenteVisible: true,
-            contextoDependente: item || {}
+            contextoDependente: Object.assign({}, item || {})
         })
     }
 
@@ -228,7 +231,7 @@ class Profile extends React.Component {
 
     concluiDependenteModal = async (contextoDependente, procedimentosAnteriores) => {
         // Alert.alert("user", Object.keys(this.props.user).toString())
-        if (!contextoDependente.NomeDependente.trim()) {
+        if (!(contextoDependente.NomeDependente && contextoDependente.NomeDependente.trim())) {
             ToastAndroid.show("Necessário preencher nome do dependente", ToastAndroid.SHORT)
             return
         }
@@ -242,29 +245,31 @@ class Profile extends React.Component {
             ToastAndroid.show("Dependente criado com sucesso", ToastAndroid.SHORT)
         }
         else {
-            await this.props.user.atualizarDependente( contextoDependente )
+            await this.props.user.atualizarDependente( contextoDependente, procedimentosAnteriores )
             ToastAndroid.show("Dependente atualizado com sucesso", ToastAndroid.SHORT)
         }
+        this.procedimentosAnteriores = null
         this.setState({
             spinnerVisible: false,
             modalDependenteVisible: false
         }, this.reload.bind(this))
     }
 
+    procedimentosAnteriores = null
     // ##1
     renderDependenteModal() {
-        let contextoDependente = Object.assign({}, this.state.contextoDependente)
-        let procedimentosAnteriores = this.state.contextoDependente.Procedimentos.slice()
-        let Procedimentos = procedimentosAnteriores.map(p => Object.assign({}, p))
+        let contextoDependente = this.state.contextoDependente
+        contextoDependente.Procedimentos = contextoDependente.Procedimentos || []
+        this.procedimentosAnteriores = this.procedimentosAnteriores || contextoDependente.Procedimentos.slice()
         // Alert.alert("DEP", JSON.stringify( contextoDependente ))
         let criandoDependente = !contextoDependente.CodigoDependente
 
         const adicionaProcedimento = () => {
-            Procedimentos.push({})
+            contextoDependente.Procedimentos.push({})
             this.forceUpdate()
         }
         const apagaProcedimento = contextoProcedimento => {
-            Procedimentos = Procedimentos.filter(p => p !== contextoProcedimento)
+            contextoDependente.Procedimentos = contextoDependente.Procedimentos.filter(p => p !== contextoProcedimento)
             this.forceUpdate()
         }
         return (
@@ -286,6 +291,9 @@ class Profile extends React.Component {
                         </ImprovedTouchable>
                     </View>
                     <ScrollView style={{'padding':8}}>
+                        <View style={_s("flex-row center-b",{'marginBottom':8})}>
+                            <Text style={_s("flex",{'fontWeight':'bold'})}>Informações Gerais</Text>
+                        </View>
                         <FormTextField
                             label="Nome do Dependente"
                             defaultValue={contextoDependente.NomeDependente}
@@ -294,7 +302,9 @@ class Profile extends React.Component {
                             label="Observações" last={true}
                             defaultValue={contextoDependente.Observacoes}
                             onChange={val => contextoDependente.Observacoes = val} />
-
+                        <View style={_s("flex-row center-b",{'marginVertical':8})}>
+                            <Text style={_s("flex",{'fontWeight':'bold'})}>Procedimentos</Text>
+                        </View>
                         <ImprovedTouchable onPress={ adicionaProcedimento }>
                             <View style={_s("flex-row center-b",{borderBottomWidth:1,borderColor:'#DEDEDE'})}>
                                 <Text style={{'textDecorationLine':'underline','paddingVertical':15,'marginLeft':10,'flex':1}}>
@@ -304,32 +314,32 @@ class Profile extends React.Component {
                             </View>
                         </ImprovedTouchable>
                         {
-                            Procedimentos.map(p => (
-                                <ListItem key={'d-'+item.CodigoDependente}
-                                    onPress={() => this.props.showDependenteModal( item )}>
-                                    <View style={{ alignSelf: 'stretch' }}>
+                            contextoDependente.Procedimentos.map((p, i) => (
+                                <ListItem key={'dp-'+i}
+                                    onPress={() => null}>
+                                    <View style={{ alignSelf: 'stretch', flex: 1 }}>
                                         <FormTextField
                                             label="Nome do Médico" last={true}
                                             defaultValue={p.NomeMedico}
                                             onChange={val => p.NomeMedico = val} />
                                         <FormTextField
                                             label="Descrição do Procedimento" last={true}
-                                            defaultValue={contextoDependente.Observacoes}
-                                            onChange={val => contextoDependente.Observacoes = val} />
+                                            defaultValue={p.DescricaoProcedimento}
+                                            onChange={val => p.DescricaoProcedimento = val} />
                                     </View>
-                                    <ImprovedTouchable onPress={() => apagaProcedimento( item )}>
-                                        <View>
+                                    <ImprovedTouchable onPress={() => apagaProcedimento(p)}>
+                                        <View style={_s("center-b", { width: 50 })}>
                                             <Icon name="circle-with-cross" style={{'fontSize':26,'color':'#000',}} />
                                         </View>
                                     </ImprovedTouchable>
                                 </ListItem>
                             ))
                         }
+                        <View style={{marginVertical:4}} />
                         <Button
                             label={criandoDependente? 'Criar Dependente': 'Aplicar mudanças'}
                             onPress={() => {
-                                contextoDependente.Procedimentos = Procedimentos
-                                this.concluiDependenteModal( contextoDependente, procedimentosAnteriores )
+                                this.concluiDependenteModal( contextoDependente, this.procedimentosAnteriores )
                             }} />
                     </ScrollView>
                 </View>

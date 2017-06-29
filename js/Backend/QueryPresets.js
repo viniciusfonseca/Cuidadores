@@ -107,21 +107,22 @@ const presets = [
                     THEN '[' || (
                         SELECT 
                             GROUP_CONCAT('{' ||
-                                '"CodigoDependente"' || ':"' || DEPENDENTES.CodigoDependente || '"' || "," ||
-                                '"NomeDependente"'   || ':"' || DEPENDENTES.NomeDependente   || '"' || "," ||
-                                '"Observacoes"'      || ':"' || DEPENDENTES.Observacoes      || '"' || "," ||
-                                '"Procedimentos"'    || ':[' || DEPENDENTES.Procedimentos    || ']' ||
+                                '"CodigoDependente"' || ':"' || DEPENDENTES.CodigoDependente           || '"' || "," ||
+                                '"NomeDependente"'   || ':"' || IFNULL(DEPENDENTES.NomeDependente, '') || '"' || "," ||
+                                '"Observacoes"'      || ':"' || IFNULL(DEPENDENTES.Observacoes, '')    || '"' || "," ||
+                                '"Procedimentos"'    || ':[' || IFNULL(DEPENDENTES.Procedimentos, '')  || ']' ||
                             '}')
                         FROM (
                             SELECT DEPENDENTE.CodigoDependente,
                                 DEPENDENTE.NomeDependente,
+                                DEPENDENTE.Observacoes,
                                 GROUP_CONCAT('{' ||
-                                    '"CodigoProcedimento"'    || ':"' || PROCEDIMENTO.CodigoProcedimento    || '"' || "," ||
-                                    '"NomeMedico"'            || ':"' || PROCEDIMENTO.NomeMedico            || '"' || "," ||
-                                    '"DescricaoProcedimento"' || ':"' || PROCEDIMENTO.DescricaoProcedimento || '"' ||
-                                '}')
+                                    '"CodigoProcedimento"'    || ':"' || PROCEDIMENTO.CodigoProcedimento                || '"' || "," ||
+                                    '"NomeMedico"'            || ':"' || IFNULL(PROCEDIMENTO.NomeMedico, '')            || '"' || "," ||
+                                    '"DescricaoProcedimento"' || ':"' || IFNULL(PROCEDIMENTO.DescricaoProcedimento, '') || '"' ||
+                                '}') AS Procedimentos
                             FROM DEPENDENTE
-                            INNER JOIN PROCEDIMENTO
+                            LEFT JOIN PROCEDIMENTO
                                 ON PROCEDIMENTO.CodigoDependente = DEPENDENTE.CodigoDependente
                             WHERE DEPENDENTE.CodigoUsuario = USUARIO.CodigoUsuario
                             GROUP BY DEPENDENTE.CodigoDependente
@@ -181,10 +182,10 @@ const presets = [
     {
         id: PRESETS_ID.CREATE_DEPENDENTE,
         base: `INSERT INTO DEPENDENTE(
-            NomeDependente, CodigoUsuario, Observacao
+            NomeDependente, CodigoUsuario, Observacoes
         )
         VALUES (
-            '<NomeDependente>', <CodigoUsuario>, '<Observacao>'
+            '<NomeDependente>', <CodigoUsuario>, '<Observacoes>'
         )`
     },
     {
