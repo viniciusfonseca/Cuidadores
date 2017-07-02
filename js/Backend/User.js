@@ -145,23 +145,23 @@ export default class User {
     }
 }
 
-const getDiffsProcedimentos = (procedimentosA, procedimentosB) => {
+const getDiffsRegistros = (registrosA, registrosB, nomeChave) => {
     let kA, kB
     let diffs = []
 
-    procedimentosA = procedimentosA.slice().sort((pA, pB) => {
-        if (pA.CodigoProcedimento <  pB.CodigoProcedimento) return -1
-        if (pA.CodigoProcedimento == pB.CodigoProcedimento) return 0
+    registrosA = (registrosA || []).slice().sort((pA, pB) => {
+        if (pA[ nomeChave ] <  pB[ nomeChave ]) return -1
+        if (pA[ nomeChave ] == pB[ nomeChave ]) return 0
         return 1
     })
-    procedimentosB = procedimentosB.slice().sort((pA, pB) => {
-        if (pA.CodigoProcedimento <  pB.CodigoProcedimento) return -1
-        if (pA.CodigoProcedimento == pB.CodigoProcedimento) return 0
+    registrosB = (registrosB || []).slice().sort((pA, pB) => {
+        if (pA[ nomeChave ] <  pB[ nomeChave ]) return -1
+        if (pA[ nomeChave ] == pB[ nomeChave ]) return 0
         return 1
     })
 
-    let cA = procedimentosA.map(p => [ p.CodigoProcedimento || -1, p ])
-    let cB = procedimentosB.map(p => [ p.CodigoProcedimento || -1, p ])
+    let cA = registrosA.map(p => [ p[ nomeChave ] || -1, p ])
+    let cB = registrosB.map(p => [ p[ nomeChave ] || -1, p ])
 
     const avancaA = () => kA = cA.shift() || [ Infinity, null ]
     const avancaB = () => kB = cB.shift() || [ Infinity, null ]
@@ -169,7 +169,7 @@ const getDiffsProcedimentos = (procedimentosA, procedimentosB) => {
     avancaA()
     avancaB()
 
-    do {
+    while (registrosA.length || registrosB.length) {
         if (kB[0] == -1 || kA[0] > kB[0]) {
             diffs.push([ 'I', kB, kB[1] ])
             avancaB()
@@ -183,7 +183,7 @@ const getDiffsProcedimentos = (procedimentosA, procedimentosB) => {
             diffs.push([ 'D', kA, kA[1] ])
             avancaA()
         }
-    } while (procedimentosA.length && procedimentosB.length)
+    }
 
     return diffs
 }
@@ -197,19 +197,31 @@ export function ResponsavelDecorator( userContext ) {
         })).rows
     }
 
-    userContext.criarDependente = async({ NomeDependente, Observacoes, Procedimentos = [] }) => {
+    userContext.criarDependente = async({ NomeDependente, Observacoes, Prescricoes = [] }) => {
         await userContext.db.fetchData(PRESETS_ID.CREATE_DEPENDENTE, {
             CodigoUsuario: userContext.getCodigoUsuario(), NomeDependente, Observacoes
         })
-        if (Procedimentos.length) {
-            let batchSQL = Procedimentos.map(Procedimento => `INSERT INTO PROCEDIMENTO (
-                NomeMedico, DescricaoProcedimento, CodigoDependente
-            ) VALUES (
-                '${Procedimento.NomeMedico}',
-                '${Procedimento.DescricaoProcedimento}',
-                (SELECT last_insert_rowid())
-            );`).join('')
-            await userContext.db.run( batchSQL )
+        if (Prescricoes.length) {
+            let { CodigoDependente } = await userContext.db.run("SELECT last_insert_rowid() AS CodigoDependente").rows.shift()
+            for (Prescricao of Prescricoes) {
+                await userContext.db.run(`INSERT INTO PRESCRICAO (
+                    NomeMedico, CRM, CodigoDependente, DataPrescricao
+                ) VALUES (
+                    '${Prescricao.NomeMedico}',
+                    '${Prescricao.CRM}',
+                    ${CodigoDependente},
+                    '${Prescricao.DataPrescricao}'
+                );`)
+                let { CodigoPrescricao } = await userContext.db.run("SELECT last_insert_rowid() AS CodigoPrescricao").rows.shift()
+                let batchSQL = Prescricao.Procedimentos.map(Procedimento => `INSERT INTO PROCEDIMENTO (
+                    DescricaoProcedimento, CodigoPrescricao, FrequenciaDia, DuracaoDias
+                ) VALUES (
+                    '${Procedimento.DescricaoProcedimento}',
+                    ${CodigoPrescricao},
+                    ${Procedimento.FrequenciaDia},
+                    ${Procedimento.DuracaoDias};`)
+                await Promise.all(batchSQL.map(sql => userContext.db.run(sql)))
+            }
         }
         return await userContext.obterDependentes()
     }
@@ -241,7 +253,7 @@ export function ResponsavelDecorator( userContext ) {
                 default:
                     return ""
             }
-        }).join('')
+        })
         await userContext.db.fetchData(PRESETS_ID.UPDATE_DEPENDENTE, {
             CodigoDependente,
             NomeDependente

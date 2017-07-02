@@ -96,7 +96,7 @@ class Profile extends React.Component {
         let dataUserBackend = (await this.props.db.fetchData(PRESETS_ID.USER_VIEW, {
             CodigoUsuario: this.user.CodigoUsuario
         })).rows[0]
-        // Alert.alert("user", JSON.stringify( dataUserBackend ))
+        Alert.alert("user", JSON.stringify( dataUserBackend ))
         this.user = Object.assign({}, this.user, dataUserBackend)
         parseFields.forEach(field => {
             try {
@@ -182,7 +182,7 @@ class Profile extends React.Component {
 */
 
     showDependenteModal( item ) {
-        this.procedimentosAnteriores = null
+        this.prescricoesAnteriores = null
         this.setState({
             modalDependenteVisible: true,
             contextoDependente: Object.assign({}, item || {})
@@ -229,7 +229,7 @@ class Profile extends React.Component {
     ************************************************************************************
 */
 
-    concluiDependenteModal = async (contextoDependente, procedimentosAnteriores) => {
+    concluiDependenteModal = async (contextoDependente, prescricoessAnteriores) => {
         // Alert.alert("user", Object.keys(this.props.user).toString())
         if (!(contextoDependente.NomeDependente && contextoDependente.NomeDependente.trim())) {
             ToastAndroid.show("Necessário preencher nome do dependente", ToastAndroid.SHORT)
@@ -245,31 +245,31 @@ class Profile extends React.Component {
             ToastAndroid.show("Dependente criado com sucesso", ToastAndroid.SHORT)
         }
         else {
-            await this.props.user.atualizarDependente( contextoDependente, procedimentosAnteriores )
+            await this.props.user.atualizarDependente( contextoDependente, prescricoesAnteriores )
             ToastAndroid.show("Dependente atualizado com sucesso", ToastAndroid.SHORT)
         }
-        this.procedimentosAnteriores = null
+        this.prescricoesAnteriores = null
         this.setState({
             spinnerVisible: false,
             modalDependenteVisible: false
         }, this.reload.bind(this))
     }
 
-    procedimentosAnteriores = null
+    prescricoesAnteriores = null
     // ##1
     renderDependenteModal() {
         let contextoDependente = this.state.contextoDependente
-        contextoDependente.Procedimentos = contextoDependente.Procedimentos || []
-        this.procedimentosAnteriores = this.procedimentosAnteriores || contextoDependente.Procedimentos.slice()
+        contextoDependente.Prescricoes = contextoDependente.Prescricoes || []
+        this.prescricoesAnteriores = this.prescricoesAnteriores || contextoDependente.Prescricoes.slice()
         // Alert.alert("DEP", JSON.stringify( contextoDependente ))
         let criandoDependente = !contextoDependente.CodigoDependente
 
-        const adicionaProcedimento = () => {
-            contextoDependente.Procedimentos.push({})
+        const adicionaPrescricao = () => {
+            contextoDependente.Prescricoes.push({})
             this.forceUpdate()
         }
-        const apagaProcedimento = contextoProcedimento => {
-            contextoDependente.Procedimentos = contextoDependente.Procedimentos.filter(p => p !== contextoProcedimento)
+        const apagaPrescricao = contextoPrescricao => {
+            contextoDependente.Prescricoes = contextoDependente.Prescricoes.filter(p => p !== contextoPrescricao)
             this.forceUpdate()
         }
         return (
@@ -303,18 +303,18 @@ class Profile extends React.Component {
                             defaultValue={contextoDependente.Observacoes}
                             onChange={val => contextoDependente.Observacoes = val} />
                         <View style={_s("flex-row center-b",{'marginVertical':8})}>
-                            <Text style={_s("flex",{'fontWeight':'bold'})}>Procedimentos</Text>
+                            <Text style={_s("flex",{'fontWeight':'bold'})}>Prescrições</Text>
                         </View>
-                        <ImprovedTouchable onPress={ adicionaProcedimento }>
+                        <ImprovedTouchable onPress={ adicionaPrescricao }>
                             <View style={_s("flex-row center-b",{borderBottomWidth:1,borderColor:'#DEDEDE'})}>
                                 <Text style={{'textDecorationLine':'underline','paddingVertical':15,'marginLeft':10,'flex':1}}>
-                                    Adicionar um procedimento
+                                    Adicionar uma prescrição
                                 </Text>
                                 <Icon name="plus" style={{'fontSize':26,'color':'#000',}} />
                             </View>
                         </ImprovedTouchable>
                         {
-                            contextoDependente.Procedimentos.map((p, i) => (
+                            contextoDependente.Prescricoes.map((p, i) => (
                                 <ListItem key={'dp-'+i}
                                     onPress={() => null}>
                                     <View style={{ alignSelf: 'stretch', flex: 1 }}>
@@ -323,11 +323,11 @@ class Profile extends React.Component {
                                             defaultValue={p.NomeMedico}
                                             onChange={val => p.NomeMedico = val} />
                                         <FormTextField
-                                            label="Descrição do Procedimento" last={true}
-                                            defaultValue={p.DescricaoProcedimento}
-                                            onChange={val => p.DescricaoProcedimento = val} />
+                                            label="Descrição da Prescrição" last={true}
+                                            defaultValue={p.DescricaoPrescricao}
+                                            onChange={val => p.DescricaoPrescricao = val} />
                                     </View>
-                                    <ImprovedTouchable onPress={() => apagaProcedimento(p)}>
+                                    <ImprovedTouchable onPress={() => apagaPrescricao(p)}>
                                         <View style={_s("center-b", { width: 50 })}>
                                             <Icon name="circle-with-cross" style={{'fontSize':26,'color':'#000',}} />
                                         </View>
@@ -339,7 +339,7 @@ class Profile extends React.Component {
                         <Button
                             label={criandoDependente? 'Criar Dependente': 'Aplicar mudanças'}
                             onPress={() => {
-                                this.concluiDependenteModal( contextoDependente, this.procedimentosAnteriores )
+                                this.concluiDependenteModal( contextoDependente, this.prescricoesAnteriores )
                             }} />
                     </ScrollView>
                 </View>
