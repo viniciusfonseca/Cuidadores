@@ -300,7 +300,8 @@ class Profile extends React.Component {
             <Modal 
                 isVisible={this.state.modalDependenteVisible}
                 animationIn="fadeInUp" 
-                animationOut="fadeOutDown">
+                animationOut="fadeOutDown"
+                onModalHide={() => { this.prescricoesAnteriores = null; this.setState({ modalDependenteVisible: false }) }}>
                 <View style={_s("flex blank", { 'borderRadius': 9, 'margin': 12 })}>
                     <View style={_s("subheader flex-stretch flex-row", { 'borderTopLeftRadius': 9, 'borderTopRightRadius': 9, 'padding': 0 })}>
                         <View style={_s("flex flex-row center-b",{'paddingLeft': 8})}>

@@ -18,19 +18,26 @@ import SubHeader from '../../Components/SubHeader'
 import _s, { PRIMARY_COLOR, SECONDARY_COLOR, TERTIARY_COLOR } from '../../Style'
 
 class Procedures extends React.Component {
-    state = {
-        loading: true,
-        index: 0,
-        routes: [
-            {
-                key: '1',
-                title: 'Procedimentos'
-            },
-            {
-                key: '2',
-                title: 'Execuções'
-            }
-        ]
+
+    tipoUsuario = null
+
+    constructor(props) {
+        super(props)
+        this.state = {
+            loading: true,
+            index: 0,
+            routes: (() => {
+                switch (this.props.user.fields.Tipo) {
+                    case User.USER_TYPE.RESPONSAVEL:
+                        return [{ key: '2', title: 'Execuções' }]
+                    case User.USER_TYPE.CUIDADOR:
+                        return [
+                            { key: '1', title: 'Procedimentos' },
+                            { key: '2', title: 'Execuções' }
+                        ]
+                }
+            })()
+        }
     }
 
     renderScene = ({ route }) => {
@@ -52,50 +59,46 @@ class Procedures extends React.Component {
     }
 }
 
-/*<ScrollView style={{'padding':8}}>
-                        <View>
-                            <View style={_s("flex-row center-b",{'marginVertical':5})}>
-                                <Text style={_s("flex",{'fontWeight':'bold'})}>Dependente X</Text>
-                            </View>
-                            <View>
-                                <CheckBox
-                                    style={{flex: 1, padding: 10, borderBottomWidth:1, borderColor: '#DEDEDE'}}
-                                    onClick={()=> null}
-                                    leftText="Fazer exercícios" />
-                                <CheckBox
-                                    style={{flex: 1, padding: 10, borderBottomWidth:1, borderColor: '#DEDEDE'}}
-                                    onClick={()=> null}
-                                    leftText="Tomar remédios" />
-                                <CheckBox
-                                    style={{flex: 1, padding: 10, borderBottomWidth:1, borderColor: '#DEDEDE'}}
-                                    onClick={()=> null}
-                                    leftText="Tomar sol"/>
-                            </View>
-                            <View style={_s("flex-row center-b",{'marginVertical':5})}>
-                                <Text style={_s("flex",{'fontWeight':'bold'})}>Dependente Y</Text>
-                            </View>
-                            <View>
-                                <CheckBox
-                                    style={{flex: 1, padding: 10, borderBottomWidth:1, borderColor: '#DEDEDE'}}
-                                    onClick={()=> null}
-                                    leftText="Realizar caminhada" />
-                                <CheckBox
-                                    style={{flex: 1, padding: 10, borderBottomWidth:1, borderColor: '#DEDEDE'}}
-                                    onClick={()=> null}
-                                    leftText="Tomar remédios" />
-                                <CheckBox
-                                    style={{flex: 1, padding: 10, borderBottomWidth:1, borderColor: '#DEDEDE'}}
-                                    onClick={()=> null}
-                                    leftText="Tomar vitamina"/>
-                            </View>
-                        </View>
-
-                    </ScrollView>*/
-
 class ProceduresTodos extends React.Component {
     render() {
         return (
-            <ScrollView>
+            <ScrollView style={{'padding':8}}>
+                <View>
+                    <View style={_s("flex-row center-b",{'marginVertical':5})}>
+                        <Text style={_s("flex",{'fontWeight':'bold'})}>Dependente X</Text>
+                    </View>
+                    <View>
+                        <CheckBox
+                            style={{flex: 1, padding: 10, borderBottomWidth:1, borderColor: '#DEDEDE'}}
+                            onClick={()=> null}
+                            leftText="Fazer exercícios" />
+                        <CheckBox
+                            style={{flex: 1, padding: 10, borderBottomWidth:1, borderColor: '#DEDEDE'}}
+                            onClick={()=> null}
+                            leftText="Tomar remédios" />
+                        <CheckBox
+                            style={{flex: 1, padding: 10, borderBottomWidth:1, borderColor: '#DEDEDE'}}
+                            onClick={()=> null}
+                            leftText="Tomar sol"/>
+                    </View>
+                    <View style={_s("flex-row center-b",{'marginVertical':5})}>
+                        <Text style={_s("flex",{'fontWeight':'bold'})}>Dependente Y</Text>
+                    </View>
+                    <View>
+                        <CheckBox
+                            style={{flex: 1, padding: 10, borderBottomWidth:1, borderColor: '#DEDEDE'}}
+                            onClick={()=> null}
+                            leftText="Realizar caminhada" />
+                        <CheckBox
+                            style={{flex: 1, padding: 10, borderBottomWidth:1, borderColor: '#DEDEDE'}}
+                            onClick={()=> null}
+                            leftText="Tomar remédios" />
+                        <CheckBox
+                            style={{flex: 1, padding: 10, borderBottomWidth:1, borderColor: '#DEDEDE'}}
+                            onClick={()=> null}
+                            leftText="Tomar vitamina"/>
+                    </View>
+                </View>
             </ScrollView>
         )
     }
