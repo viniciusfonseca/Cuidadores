@@ -6,6 +6,7 @@ import {
 import { connect } from 'react-redux'
 
 import CheckBox from 'react-native-check-box'
+import { TabViewAnimated, TabBar, SceneMap } from 'react-native-tab-view'
 
 import User from '../../Backend/User'
 import { PRESETS_ID } from '../../Backend/QueryPresets'
@@ -17,12 +18,41 @@ import SubHeader from '../../Components/SubHeader'
 import _s, { PRIMARY_COLOR, SECONDARY_COLOR, TERTIARY_COLOR } from '../../Style'
 
 class Procedures extends React.Component {
+    state = {
+        loading: true,
+        index: 0,
+        routes: [
+            {
+                key: '1',
+                title: 'Procedimentos'
+            },
+            {
+                key: '2',
+                title: 'Execuções'
+            }
+        ]
+    }
+
+    renderScene = ({ route }) => {
+        switch (route.key) {
+            case '1': return <ProceduresTodos />
+            case '2': return <ExecStories />
+        }
+    }
+
     render() {
         return (
             <View style={_s("flex blank")}>
                 <NavBar enableNavBtn={true} navigation={this.props.navigation} />
                 <View style={_s("flex",{'zIndex':0})}>
-                    <ScrollView style={{'padding':8}}>
+                    
+                </View>
+            </View>
+        )
+    }
+}
+
+/*<ScrollView style={{'padding':8}}>
                         <View>
                             <View style={_s("flex-row center-b",{'marginVertical':5})}>
                                 <Text style={_s("flex",{'fontWeight':'bold'})}>Dependente X</Text>
@@ -60,9 +90,22 @@ class Procedures extends React.Component {
                             </View>
                         </View>
 
-                    </ScrollView>
-                </View>
-            </View>
+                    </ScrollView>*/
+
+class ProceduresTodos extends React.Component {
+    render() {
+        return (
+            <ScrollView>
+            </ScrollView>
+        )
+    }
+}
+
+class ExecStories extends React.Component {
+    render() {
+        return (
+            <ScrollView>
+            </ScrollView>
         )
     }
 }

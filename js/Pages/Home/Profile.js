@@ -31,7 +31,7 @@ import { noop } from '../../App'
 import { arrayToggleElement } from './Search'
 
 const FormTextField = props => (
-    <View style={_s("flex-stretch", { 'marginTop': 8 })}>
+    <View style={_s("flex-stretch", Object.assign({ 'marginTop': 8 }, props.style || {}))}>
         <Text>{props.label}</Text>
         <TextInput
             underlineColorAndroid="transparent"
@@ -42,6 +42,7 @@ const FormTextField = props => (
             autoCapitalize="sentences"
             value={ props.value }
             defaultValue={ props.defaultValue }
+            keyboardType={ props.type }
             />
     </View>
 )
@@ -96,7 +97,7 @@ class Profile extends React.Component {
         let dataUserBackend = (await this.props.db.fetchData(PRESETS_ID.USER_VIEW, {
             CodigoUsuario: this.user.CodigoUsuario
         })).rows[0]
-        Alert.alert("user", JSON.stringify( dataUserBackend ))
+        // Alert.alert("user", JSON.stringify( dataUserBackend ))
         this.user = Object.assign({}, this.user, dataUserBackend)
         parseFields.forEach(field => {
             try {
@@ -229,7 +230,7 @@ class Profile extends React.Component {
     ************************************************************************************
 */
 
-    concluiDependenteModal = async (contextoDependente, prescricoessAnteriores) => {
+    concluiDependenteModal = async (contextoDependente, prescricoesAnteriores) => {
         // Alert.alert("user", Object.keys(this.props.user).toString())
         if (!(contextoDependente.NomeDependente && contextoDependente.NomeDependente.trim())) {
             ToastAndroid.show("Necessário preencher nome do dependente", ToastAndroid.SHORT)
@@ -260,16 +261,39 @@ class Profile extends React.Component {
     renderDependenteModal() {
         let contextoDependente = this.state.contextoDependente
         contextoDependente.Prescricoes = contextoDependente.Prescricoes || []
-        this.prescricoesAnteriores = this.prescricoesAnteriores || contextoDependente.Prescricoes.slice()
+        this.prescricoesAnteriores = this.prescricoesAnteriores || contextoDependente.Prescricoes.slice().map(
+            Prescricao => Object.assign({}, Prescricao, { Procedimentos: Prescricao.Procedimentos.slice().map(
+                Procedimento => Object.assign({}, Procedimento)
+            )})
+        )
         // Alert.alert("DEP", JSON.stringify( contextoDependente ))
         let criandoDependente = !contextoDependente.CodigoDependente
 
         const adicionaPrescricao = () => {
-            contextoDependente.Prescricoes.push({})
+            contextoDependente.Prescricoes.push({ Procedimentos: [] })
+            this.forceUpdate()
+        }
+        const adicionaProcedimento = contextoPrescricao => {
+            contextoPrescricao.Procedimentos.push({ FrequenciaDia: '1', DuracaoDias: '7' })
             this.forceUpdate()
         }
         const apagaPrescricao = contextoPrescricao => {
-            contextoDependente.Prescricoes = contextoDependente.Prescricoes.filter(p => p !== contextoPrescricao)
+            Alert.alert("Apagar prescrição", "Deseja realmente apagar esta prescrição?", [
+                {
+                    text: 'Não',
+                    onPress: noop
+                },
+                {
+                    text: 'Sim',
+                    onPress: () => {
+                        contextoDependente.Prescricoes = contextoDependente.Prescricoes.filter(p => p !== contextoPrescricao)
+                        this.forceUpdate()
+                    }
+                }
+            ])
+        }
+        const apagaProcedimento = (contextoPrescricao, contextoProcedimento) => {
+            contextoPrescricao.Procedimentos = contextoPrescricao.Procedimentos.filter(p !== contextoProcedimento)
             this.forceUpdate()
         }
         return (
@@ -280,9 +304,9 @@ class Profile extends React.Component {
                 <View style={_s("flex blank", { 'borderRadius': 9, 'margin': 12 })}>
                     <View style={_s("subheader flex-stretch flex-row", { 'borderTopLeftRadius': 9, 'borderTopRightRadius': 9, 'padding': 0 })}>
                         <View style={_s("flex flex-row center-b",{'paddingLeft': 8})}>
-                            <Text style={{ 'fontWeight': 'bold', 'fontSize': 16 }}>{
-                                criandoDependente? 'Criar Dependente': 'Editar Dependente'
-                            }</Text>
+                            <Text style={{ 'fontWeight': 'bold', 'fontSize': 16 }}>
+                                { criandoDependente? 'Criar Dependente': 'Editar Dependente' }
+                            </Text>
                         </View>
                         <ImprovedTouchable onPress={() => this.setState({ modalDependenteVisible: false })}>
                             <View style={_s("center-a center-b",{'width':50, 'height':'100%',})}>
@@ -302,7 +326,7 @@ class Profile extends React.Component {
                             label="Observações" last={true}
                             defaultValue={contextoDependente.Observacoes}
                             onChange={val => contextoDependente.Observacoes = val} />
-                        <View style={_s("flex-row center-b",{'marginVertical':8})}>
+                        <View style={_s("flex-row",{'marginVertical':8})}>
                             <Text style={_s("flex",{'fontWeight':'bold'})}>Prescrições</Text>
                         </View>
                         <ImprovedTouchable onPress={ adicionaPrescricao }>
@@ -314,25 +338,78 @@ class Profile extends React.Component {
                             </View>
                         </ImprovedTouchable>
                         {
-                            contextoDependente.Prescricoes.map((p, i) => (
-                                <ListItem key={'dp-'+i}
-                                    onPress={() => null}>
-                                    <View style={{ alignSelf: 'stretch', flex: 1 }}>
-                                        <FormTextField
-                                            label="Nome do Médico" last={true}
-                                            defaultValue={p.NomeMedico}
-                                            onChange={val => p.NomeMedico = val} />
-                                        <FormTextField
-                                            label="Descrição da Prescrição" last={true}
-                                            defaultValue={p.DescricaoPrescricao}
-                                            onChange={val => p.DescricaoPrescricao = val} />
+                            contextoDependente.Prescricoes.map((Prescricao, i) => (
+                                <View key={'presc-'+i}>
+                                    <View style={_s("flex-row",{'marginVertical':8})}>
+                                        <Text style={_s("flex",{'fontWeight':'bold'})}>Prescrição #{i+1}</Text>
+                                        <ImprovedTouchable onPress={() => apagaPrescricao(Prescricao)}>
+                                            <Text style={{textDecorationLine: 'underline'}}>Excluir</Text>
+                                        </ImprovedTouchable>
                                     </View>
-                                    <ImprovedTouchable onPress={() => apagaPrescricao(p)}>
-                                        <View style={_s("center-b", { width: 50 })}>
-                                            <Icon name="circle-with-cross" style={{'fontSize':26,'color':'#000',}} />
+                                    <View style={_s("flex-row",{ alignSelf: 'stretch'})}>
+                                        <View style={_s("flex")}>
+                                            <FormTextField
+                                                label="Nome do Médico"
+                                                defaultValue={Prescricao.NomeMedico}
+                                                onChange={val => Prescricao.NomeMedico = val} />
+                                            <View style={_s("flex-row")}>
+                                                <FormTextField
+                                                    style={{ flex: 1 }}
+                                                    label="CRM"
+                                                    defaultValue={Prescricao.CRM}
+                                                    onChange={val => Prescricao.CRM = val} />
+                                                <FormTextField
+                                                    style={{ flex: 1 }}
+                                                    label="Data da Prescrição" last={true} type="numeric"
+                                                    defaultValue={Prescricao.DataPrescricao}
+                                                    onChange={val => Prescricao.DataPrescricao = val} />
+                                            </View>
                                         </View>
-                                    </ImprovedTouchable>
-                                </ListItem>
+                                    </View>
+                                    <View>
+                                        <View style={{marginLeft: 12, paddingLeft: 12, borderLeftWidth:1, borderColor:'#DDD'}}>
+                                            <ImprovedTouchable onPress={() => adicionaProcedimento(Prescricao)}>
+                                                <View style={_s("flex-row center-b",{borderBottomWidth:1,borderColor:'#DEDEDE'})}>
+                                                    <Text style={{'textDecorationLine':'underline','paddingVertical':15,'marginLeft':10,'flex':1}}>
+                                                        Adicionar um procedimento
+                                                    </Text>
+                                                    <Icon name="plus" style={{'fontSize':26,'color':'#000',}} />
+                                                </View>
+                                            </ImprovedTouchable>
+                                            {
+                                                Prescricao.Procedimentos.map((Procedimento, i) => (
+                                                    <View key={'proc-'+i}>
+                                                        <View style={_s("flex-row",{'marginVertical':8})}>
+                                                            <Text style={_s("flex",{'fontWeight':'bold'})}>Procedimento #{i+1}</Text>
+                                                            <ImprovedTouchable onPress={() => apagaProcedimento(Prescricao, Procedimento)}>
+                                                                <Text style={{textDecorationLine: 'underline'}}>Excluir</Text>
+                                                            </ImprovedTouchable>
+                                                        </View>
+                                                        <View style={{ alignSelf: 'stretch', flex: 1 }}>
+                                                            <FormTextField
+                                                            style={{ flex: 1 }}
+                                                                label="Descrição"
+                                                                defaultValue={Prescricao.DescricaoProcedimento}
+                                                                onChange={val => Prescricao.DescricaoPrescricao = val} />
+                                                            <View style={_s("flex-row")}>
+                                                                <FormTextField
+                                                                    style={{ flex: 1 }}
+                                                                    label="Vezes ao dia" type="numeric"
+                                                                    defaultValue={Prescricao.FrequenciaDia || '1'}
+                                                                    onChange={val => Prescricao.FrequenciaDia = val} />
+                                                                <FormTextField
+                                                                    style={{ flex: 1 }}
+                                                                    label="Duração em dias" type="numeric"
+                                                                    defaultValue={Prescricao.DuracaoDias || '7'}
+                                                                    onChange={val => Prescricao.DuracaoDias = val} />
+                                                            </View>
+                                                        </View>
+                                                    </View>
+                                                ))
+                                            }
+                                        </View>
+                                    </View>
+                                </View>
                             ))
                         }
                         <View style={{marginVertical:4}} />

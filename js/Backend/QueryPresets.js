@@ -93,7 +93,7 @@ const presets = [
                     WHEN Usuario.Tipo = 1 THEN '[' || (
                         SELECT
                             GROUP_CONCAT('{' ||                                
-                                '"CodigoEspecialidade"'    || ':"' || ESPECIALIDADE.CodigoEspecialidade    || '"' || "," ||
+                                '"CodigoEspecialidade"'    || ': ' || ESPECIALIDADE.CodigoEspecialidade    || ' ' || "," ||
                                 '"DescricaoEspecialidade"' || ':"' || ESPECIALIDADE.DescricaoEspecialidade || '"' ||
                             '}')
                         FROM ESPECIALIDADE
@@ -107,23 +107,37 @@ const presets = [
                     THEN '[' || (
                         SELECT 
                             GROUP_CONCAT('{' ||
-                                '"CodigoDependente"' || ':"' || DEPENDENTES.CodigoDependente           || '"' || "," ||
+                                '"CodigoDependente"' || ': ' || DEPENDENTES.CodigoDependente           || ' ' || "," ||
                                 '"NomeDependente"'   || ':"' || IFNULL(DEPENDENTES.NomeDependente, '') || '"' || "," ||
                                 '"Observacoes"'      || ':"' || IFNULL(DEPENDENTES.Observacoes, '')    || '"' || "," ||
-                                '"Procedimentos"'    || ':[' || IFNULL(DEPENDENTES.Procedimentos, '')  || ']' ||
+                                '"Prescricoes"'      || ':[' || IFNULL(DEPENDENTES.Prescricoes, '')    || ']' ||
                             '}')
                         FROM (
                             SELECT DEPENDENTE.CodigoDependente,
                                 DEPENDENTE.NomeDependente,
                                 DEPENDENTE.Observacoes,
                                 GROUP_CONCAT('{' ||
-                                    '"CodigoProcedimento"'    || ':"' || PROCEDIMENTO.CodigoProcedimento                || '"' || "," ||
-                                    '"NomeMedico"'            || ':"' || IFNULL(PROCEDIMENTO.NomeMedico, '')            || '"' || "," ||
-                                    '"DescricaoProcedimento"' || ':"' || IFNULL(PROCEDIMENTO.DescricaoProcedimento, '') || '"' ||
-                                '}') AS Procedimentos
+                                    '"CodigoPrescricao"' || ': '  || PRESCRICAO.CodigoPrescricao             || ' ' || "," ||
+                                    '"NomeMedico"'       || ':"'  || IFNULL(PRESCRICAO.NomeMedico, '')       || '"' || "," ||
+                                    '"CRM"'              || ':"'  || IFNULL(PRESCRICAO.CRM, '')              || '"' || "," ||
+                                    '"DataPrescricao"'   || ':"'  || IFNULL(PRESCRICAO.DataPrescricao, '')   || '"' || "," ||
+                                    '"Procedimentos"'    || ':['  || IFNULL(PROCEDIMENTOS.Procedimentos, '') || ']' ||
+                                '}') AS Prescricoes
                             FROM DEPENDENTE
-                            LEFT JOIN PROCEDIMENTO
-                                ON PROCEDIMENTO.CodigoDependente = DEPENDENTE.CodigoDependente
+                            LEFT JOIN PRESCRICAO
+                                ON PRESCRICAO.CodigoDependente = DEPENDENTE.CodigoDependente
+                            LEFT JOIN (
+                                SELECT PROCEDIMENTO.CodigoPrescricao,
+                                GROUP_CONCAT('{' ||
+                                    '"CodigoProcedimento"'    || ': ' || PROCEDIMENTO.CodigoProcedimento                || ' ' || "," ||
+                                    '"DescricaoProcedimento"' || ':"' || IFNULL(PROCEDIMENTO.DescricaoProcedimento, '') || '"' || "," ||
+                                    '"CodigoPrescricao"'      || ': ' || IFNULL(PROCEDIMENTO.CodigoPrescricao, '')      || ' ' || "," ||
+                                    '"FrequenciaDia"'         || ': ' || IFNULL(PROCEDIMENTO.FrequenciaDia, '')         || ' ' || "," ||
+                                    '"DuracaoDias"'           || ': ' || IFNULL(PROCEDIMENTO.DuracaoDias, '')           || ' ' || 
+                                '}') AS Procedimentos
+                                FROM PROCEDIMENTO
+                            ) AS PROCEDIMENTOS
+                                ON PROCEDIMENTOS.CodigoPrescricao = PRESCRICAO.CodigoPrescricao
                             WHERE DEPENDENTE.CodigoUsuario = USUARIO.CodigoUsuario
                             GROUP BY DEPENDENTE.CodigoDependente
                             ORDER BY DEPENDENTE.CodigoDependente DESC

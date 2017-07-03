@@ -169,7 +169,7 @@ const getDiffsRegistros = (registrosA, registrosB, nomeChave) => {
     avancaA()
     avancaB()
 
-    while (registrosA.length || registrosB.length) {
+    do {
         if (kB[0] == -1 || kA[0] > kB[0]) {
             diffs.push([ 'I', kB, kB[1] ])
             avancaB()
@@ -183,7 +183,7 @@ const getDiffsRegistros = (registrosA, registrosB, nomeChave) => {
             diffs.push([ 'D', kA, kA[1] ])
             avancaA()
         }
-    }
+    } while (registrosA.length || registrosB.length)
 
     return diffs
 }
@@ -220,7 +220,7 @@ export function ResponsavelDecorator( userContext ) {
                     ${CodigoPrescricao},
                     ${Procedimento.FrequenciaDia},
                     ${Procedimento.DuracaoDias};`)
-                await Promise.all(batchSQL.map(sql => userContext.db.run(sql)))
+                await Promise.all( batchSQL.map(sql => userContext.db.run(sql)) )
             }
         }
         return await userContext.obterDependentes()
@@ -229,36 +229,75 @@ export function ResponsavelDecorator( userContext ) {
     userContext.atualizarDependente = async({
         CodigoDependente,
         NomeDependente,
-        Procedimentos
-    }, procedimentosAnteriores) => {
-        const diffs = getDiffsProcedimentos(procedimentosAnteriores, Procedimentos)
-        let batchSQL= diffs.map(([ op, CodigoProcedimento, Procedimento ]) => {
+        Observacoes,
+        Prescricoes
+    }, prescricoesAnteriores) => {
+        const diffsPrescricoes = getDiffsRegistros(prescricoesAnteriores, Prescricoes, 'CodigoPrescricao')
+        let batchSQLPrescricoes = diffsPrescricoes.map(([ op, CodigoPrescricao, Prescricao ]) => {
             switch (op) {
                 case 'I':
-                    return `INSERT INTO PROCEDIMENTO (
-                        NomeMedico, DescricaoProcedimento, CodigoDependente
+                    return `INSERT INTO PRESCRICAO (
+                        NomeMedico, CRM, DataPrescricao, CodigoDependente
                     ) VALUES (
-                        '${Procedimento.NomeMedico}',
-                        '${Procedimento.DescricaoProcedimento}',
-                         ${CodigoDependente}
+                        '${Prescricao.NomeMedico}',
+                        '${Prescricao.CRM}',
+                        '${Prescricao.DataPrescricao}',
+                        ${CodigoDependente}
                     );`
                 case 'U':
-                    return `UPDATE PROCEDIMENTO SET
-                        NomeMedico='${Procedimento.NomeMedico}',
-                        DescricaoProcedimento='${Procedimento.DescricaoProcedimento}'
-                        WHERE PROCEDIMENTO.CodigoProcedimento=${Procedimento.CodigoProcedimento};`
+                    return `UPDATE PRESCRICAO SET
+                        NomeMedico='${Prescricao.NomeMedico}',
+                        CRM='${Prescricao.CRM}',
+                        DataPrescricao='${Prescricao.DataPrescricao}'
+                        WHERE PRESCRICAO.CodigoPrescricao=${CodigoPrescricao};`
                 case 'D':
-                    return `DELETE FROM PROCEDIMENTO 
-                        WHERE PROCEDIMENTO.CodigoProcedimento=${Procedimento.CodigoProcedimento};`
+                    return `DELETE FROM PRESCRICAO 
+                        WHERE PRESCRICAO.CodigoPrescricao=${CodigoPrescricao};`
                 default:
                     return ""
             }
         })
         await userContext.db.fetchData(PRESETS_ID.UPDATE_DEPENDENTE, {
             CodigoDependente,
-            NomeDependente
+            NomeDependente,
+            Observacoes
         })
-        await userContext.db.run( batchSQL )
+        await Promise.all(
+            batchSQLPrescricoes.map(sql => userContext.db.run( sql ))
+        )
+
+        const diffsProcedimentos = getDiffsRegistros(
+            [].concat(prescricoesAnteriores.map(Prescricao => Prescricao.Procedimentos || [])),
+            [].concat(Prescricoes.map(Prescricao => Prescricao.Procedimentos || [])),
+            'CodigoProcedimento'
+        )
+        let batchSQLProcedimentos = diffsProcedimentos.map(([op, CodigoProcedimento, Procedimento]) => {
+            switch (op) {
+                case 'I':
+                    return `INSERT INTO PROCEDIMENTO (
+                        DescricaoProcedimento, CodigoPrescricao, FrequenciaDia, DuracaoDias
+                    ) VALUES (
+                        '${Procedimento.DescricaoProcedimento}',
+                        ${Procedimento.CodigoPrescricao},
+                        ${Procedimento.FrequenciaDia},
+                        ${Procedimento.DuracaoDias}
+                    );`
+                case 'U':
+                    return `UPDATE PROCEDIMENTO SET
+                        DescricaoProcedimento='${Procedimento.DescricaoProcedimento}'
+                        FrequenciaDia=${Procedimento.FrequenciaDia},
+                        DuracaoDias=${Procedimento.DuracaoDias}
+                        WHERE PROCEDIMENTO.CodigoProcedimento=${CodigoProcedimento};`
+                case 'D':
+                    return `DELETE FROM PROCEDIMENTO 
+                        WHERE PROCEDIMENTO.CodigoProcedimento=${CodigoProcedimento};`
+                default:
+                    return ""
+            }
+        })
+        await Promise.all(
+            batchSQLProcedimentos.map(sql => userContext.db.run(sql))
+        )
         return await userContext.obterDependentes()
     }
 
