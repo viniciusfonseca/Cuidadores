@@ -218,16 +218,15 @@ class Profile extends React.Component {
             },
             {
                 text: 'Sim',
-                onPress: () => replaceState({
-                    navigation: this.props.parentNavigation
-                }, Actions.PossibleRoutes.LOGIN)
+                onPress: async() => {
+                    await this.props.user.apagarDependente( contextoDependente )
+                    this.user.Dependentes = this.user.Dependentes.filter(
+                        dependente => dependente.CodigoDependente !== contextoDependente.CodigoDependente
+                    )
+                    this.forceUpdate()
+                }
             }
         ])
-        await this.props.user.apagarDependente( contextoDependente )
-        this.user.Dependentes = this.user.Dependentes.filter(
-            dependente => dependente.CodigoDependente !== contextoDependente.CodigoDependente
-        )
-        this.forceUpdate()
     }
 
     apagaEspecialidade( contextoEspecialidade ) {
@@ -500,32 +499,66 @@ class Profile extends React.Component {
                 <View style={_s("flex blank", { 'borderRadius': 9, 'margin': 12 })}>
                     <View style={_s("subheader flex-stretch flex-row", { 'borderTopLeftRadius': 9, 'borderTopRightRadius': 9, 'padding': 0 })}>
                         <View style={_s("flex flex-row center-b",{'paddingLeft': 8})}>
-                            <Text style={{ 'fontWeight': 'bold', 'fontSize': 16 }}>Adicionar Especialidade</Text>
+                            <Text style={{ 'fontWeight': 'bold', 'fontSize': 16 }}>Escolher dependente</Text>
                         </View>
-                        <ImprovedTouchable onPress={() => this.setState({ modalEspecialidadesVisible: false })}>
+                        <ImprovedTouchable onPress={() => this.setState({ modalSelectDepVisible: false })}>
                             <View style={_s("center-a center-b",{'width':50, 'height':'100%',})}>
                                 <Icon name="circle-with-cross" style={{'fontSize':26,'color':'#000',}} />
                             </View>
                         </ImprovedTouchable>
                     </View>
                     <ScrollView style={{'padding':8}}>
+                        <View style={_s("flex-row center-b",{'marginBottom':8})}>
+                            <Text style={_s("flex",{'fontWeight':'bold'})}>Escolha um dependente para este contrato</Text>
+                        </View>
+                        {
+                            this.optsDependentes.map(Dependente => (
+                                <ListItem key={'depsel-'+Dependente.CodigoDependente}
+                                    label={Dependente.NomeDependente}
+                                    onPress={() => this.concluiContratoCuidador(contextoDependente)}/>
+                            ))
+                        }
                     </ScrollView>
                 </View>
             </Modal>
         )
     }
 
+    // ##2
     contratarCuidador() {
-        Alert.alert("Oferecer Serviço", "Deseja contratar este cuidador?", [
+        Alert.alert("Contratar Cuidador", "Deseja contratar este cuidador?", [
             {
                 text: 'Não',
                 onPress: noop
             },
             {
                 text: 'Sim',
-                onPress: noop
+                onPress: () => this.setState({
+                    spinnerVisible: true
+                }, async() => {
+                    const Dependentes = (await this.props.user.db.fetchData(PRESETS_ID.DEPENDENTES, { CodigoUsuario: this.props.user.getCodigoUsuario() })).rows
+                    if (!Dependentes.length) {
+                        ToastAndroid.show("Necessário ter um dependente cadastrado para contratar este cuidador", ToastAndroid.SHORT)
+                        this.setState({
+                            spinnerVisible: false
+                        })
+                        return
+                    }
+                    this.optsDependentes = Dependentes
+                    this.setState({ modalSelectDepVisible: true })
+                })
             }
         ])
+    }
+
+    concluiContratoCuidador = async contextoDependente => {
+        await User.Contratos.Novo(this.props.user.db, {
+            CodigoUsuarioCuidador: this.user.CodigoUsuario,
+            CodigoDependente: contextoDependente.CodigoDependente,
+            Requerente: User.Contratos.Status.PENDENTE_RESPONSAVEL
+        })
+        ToastAndroid.show("Proposta enviada ao cuidador", ToastAndroid.SHORT)
+        this.setState({ modalSelectDepVisible: false })
     }
 
     render() {
@@ -663,6 +696,8 @@ class Dependentes extends React.Component {
 
 class Contratos extends React.Component {
     render() {
+        const contratosPendentes = this.props.value.filter(Contrato => Contrato.Status === User.Contratos.Status.PENDENTE_CUIDADOR || Contrato.Status === User.Contratos.Status.PENDENTE_RESPONSAVEL)
+        const contratosAceitos   = this.props.value.filter(Contrato => Contrato.Status === User.Contratos.Status.ACEITO)
         return (
             this.props.value.length == 0 ? (
                 this.props.isVisitingOwnProfile ? (
