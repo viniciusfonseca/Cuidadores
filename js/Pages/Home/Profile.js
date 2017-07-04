@@ -73,6 +73,7 @@ class Profile extends React.Component {
             index: 0,
             routes: [],
 
+            modalSelectDepVisible:      false,
             modalDependenteVisible:     false,
             modalEspecialidadesVisible: false,
 
@@ -210,6 +211,18 @@ class Profile extends React.Component {
     }
 
     apagaDependente = async contextoDependente => {
+        Alert.alert("Apagar depedente", "Deseja excluir este dependente?", [
+            {
+                text: 'Não',
+                onPress: noop
+            },
+            {
+                text: 'Sim',
+                onPress: () => replaceState({
+                    navigation: this.props.parentNavigation
+                }, Actions.PossibleRoutes.LOGIN)
+            }
+        ])
         await this.props.user.apagarDependente( contextoDependente )
         this.user.Dependentes = this.user.Dependentes.filter(
             dependente => dependente.CodigoDependente !== contextoDependente.CodigoDependente
@@ -390,18 +403,18 @@ class Profile extends React.Component {
                                                             <FormTextField
                                                             style={{ flex: 1 }}
                                                                 label="Descrição"
-                                                                defaultValue={Prescricao.DescricaoProcedimento}
-                                                                onChange={val => Prescricao.DescricaoPrescricao = val} />
+                                                                defaultValue={Procedimento.DescricaoProcedimento}
+                                                                onChange={val => Procedimento.DescricaoPrescricao = val} />
                                                             <View style={_s("flex-row")}>
                                                                 <FormTextField
                                                                     style={{ flex: 1 }}
                                                                     label="Vezes ao dia" type="numeric"
-                                                                    defaultValue={Prescricao.FrequenciaDia || '1'}
+                                                                    defaultValue={Procedimento.FrequenciaDia || '1'}
                                                                     onChange={val => Prescricao.FrequenciaDia = val} />
                                                                 <FormTextField
                                                                     style={{ flex: 1 }}
                                                                     label="Duração em dias" type="numeric"
-                                                                    defaultValue={Prescricao.DuracaoDias || '7'}
+                                                                    defaultValue={Procedimento.DuracaoDias || '7'}
                                                                     onChange={val => Prescricao.DuracaoDias = val} />
                                                             </View>
                                                         </View>
@@ -477,6 +490,31 @@ class Profile extends React.Component {
         )
     }
 
+    optsDependentes = null
+    renderSelectDepModal() {
+        return (
+            <Modal
+                isVisible={this.state.modalEspecialidadesVisible} 
+                animationIn="fadeInUp" 
+                animationOut="fadeOutDown">
+                <View style={_s("flex blank", { 'borderRadius': 9, 'margin': 12 })}>
+                    <View style={_s("subheader flex-stretch flex-row", { 'borderTopLeftRadius': 9, 'borderTopRightRadius': 9, 'padding': 0 })}>
+                        <View style={_s("flex flex-row center-b",{'paddingLeft': 8})}>
+                            <Text style={{ 'fontWeight': 'bold', 'fontSize': 16 }}>Adicionar Especialidade</Text>
+                        </View>
+                        <ImprovedTouchable onPress={() => this.setState({ modalEspecialidadesVisible: false })}>
+                            <View style={_s("center-a center-b",{'width':50, 'height':'100%',})}>
+                                <Icon name="circle-with-cross" style={{'fontSize':26,'color':'#000',}} />
+                            </View>
+                        </ImprovedTouchable>
+                    </View>
+                    <ScrollView style={{'padding':8}}>
+                    </ScrollView>
+                </View>
+            </Modal>
+        )
+    }
+
     contratarCuidador() {
         Alert.alert("Oferecer Serviço", "Deseja contratar este cuidador?", [
             {
@@ -506,9 +544,9 @@ class Profile extends React.Component {
                 <Spinner visible={this.state.spinnerVisible} size={70}
                     textStyle={{color:'#FFFFFF'}}
                     textContent={this.state.textSpinner} />
-                { this.isVisitingOwnProfile && this.user.Tipo == User.USER_TYPE.RESPONSAVEL && this.renderDependenteModal.call(this) }
-                { this.isVisitingOwnProfile && this.user.Tipo == User.USER_TYPE.CUIDADOR    && this.renderEspecialidadesModal.call(this) }
-                
+                {  this.isVisitingOwnProfile && this.user.Tipo == User.USER_TYPE.RESPONSAVEL              && this.renderDependenteModal.call(this) }
+                {  this.isVisitingOwnProfile && this.user.Tipo == User.USER_TYPE.CUIDADOR                 && this.renderEspecialidadesModal.call(this) }
+                { !this.isVisitingOwnProfile && this.props.user.fields.Tipo == User.USER_TYPE.RESPONSAVEL && this.renderSelectDepModal.call(this) }
                 <NavBar
                     enableBackBtn={this.asStack}
                     enableNavBtn={!this.asStack}
@@ -538,7 +576,7 @@ class Profile extends React.Component {
                                         case User.USER_TYPE.RESPONSAVEL:
                                             return <View />
                                         case User.USER_TYPE.CUIDADOR:
-                                            return (
+                                            return this.props.user.fields.Tipo == User.USER_TYPE.RESPONSAVEL && (
                                                 <View style={{marginTop:6}}>
                                                     <Button label="Contratar cuidador" onPress={this.contratarCuidador.bind(this)} />
                                                 </View>

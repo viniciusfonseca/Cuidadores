@@ -63,6 +63,10 @@ class ProceduresTodos extends React.Component {
     render() {
         return (
             <ScrollView style={{'padding':8}}>
+
+                
+
+
                 <View>
                     <View style={_s("flex-row center-b",{'marginVertical':5})}>
                         <Text style={_s("flex",{'fontWeight':'bold'})}>Dependente X</Text>

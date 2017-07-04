@@ -16,7 +16,9 @@ export const PRESETS_ID = {
     DELETE_DEPENDENTE:    "DELETE_DEPENDENTE",
 
     ADD_ESPECIALIDADE:    "ADD_ESPECIALIDADE",
-    REMOVE_ESPECIALIDADE: "REMOVE_ESPECIALIDADE"
+    REMOVE_ESPECIALIDADE: "REMOVE_ESPECIALIDADE",
+
+    CONTRATOS_PROCEDIMENTOS_EXECUCOES: "CONTRATOS_PROCEDIMENTOS_EXECUCOES"
 
 }
 const presets = [
@@ -146,13 +148,29 @@ const presets = [
                     WHEN Usuario.Tipo = 1 THEN ''
                     END AS Dependentes,
                     ---------------------------
-                    ( -- TODO: Contratos
-                        '[' /*||
-                            GROUP_CONCAT('{' || 
-                                '"CodigoUsuario"' || ':"' || USUARIO.CodigoUsuario || '"' || "," ||
-                                '"Nome"'          || ':"' || USUARIO.Nome          || '"' ||
-                            '}')*/ ||
+                    (
+                        SELECT '[' ||
+                            GROUP_CONCAT('{' ||
+                                '"CodigoContrato"'  || ':"' || CONTRATO.CodigoContrato        || '"' || "," ||
+                                '"CodigoUsuario"'   || ':"' || CONTRATO.CodigoUsuarioCuidador || '"' || "," ||
+                                '"NomeContratante"' || ':"' || USUARIOS.Nome                  || '"' || "," ||
+                                '"NomeDependente"'  || ':"' || DEPENDENTE.NomeDependente      || '"' || "," ||
+                                '"Status"'          || ':"' || CONTRATO.Status                || '"' ||
+                            '}') ||
                         ']'
+                        FROM CONTRATO
+                        INNER JOIN (
+                            SELECT USUARIO.CodigoUsuario, USUARIO.Nome
+                            FROM USUARIO
+                        ) AS USUARIOS
+                            ON USUARIOS.CodigoUsuario = CONTRATO.CodigoUsuarioCuidador
+                        INNER JOIN DEPENDENTE
+                            ON CONTRATO.CodigoDependente = DEPENDENTE.CodigoDependente
+                        WHERE CASE WHEN USUARIO.Tipo = 0
+                                THEN DEPENDENTE.CodigoUsuario = USUARIO.CodigoUsuario
+                                ELSE CONTRATO.CodigoUsuarioCuidador = USUARIO.CodigoUsuario 
+                            END
+                            AND CONTRATO.Status <> "CANCELADO"
                     ) AS Contratos
                 FROM USUARIO
                 WHERE USUARIO.CodigoUsuario = <CodigoUsuario>`
@@ -223,6 +241,27 @@ const presets = [
         base: `DELETE FROM CUIDADOR_ESPECIALDIADE
                 WHERE CUIDADOR_ESPECIALIDADE.CodigoUsuario = <CodigoUsuario>
                     AND CUIDADOR_ESPECIALIDADE.CodigoEspecialidade = <CodigoEspecialidade>`
+    },
+    {
+        id: PRESETS_ID.CONTRATOS_PROCEDIMENTOS_EXECUCOES,
+        base: `SELECT PRESCRICAO.CodigoPrescricao,
+                GROUP_CONCAT('{' ||
+                    '"CodigoProcedimento"'    || ': ' || PROCEDIMENTO.CodigoProcedimento                || ' ' || "," ||
+                    '"DescricaoProcedimento"' || ':"' || IFNULL(PROCEDIMENTO.DescricaoProcedimento, '') || '"' || "," ||
+                    '"CodigoPrescricao"'      || ': ' || IFNULL(PROCEDIMENTO.CodigoPrescricao, '')      || ' ' || "," ||
+                    '"FrequenciaDia"'         || ': ' || IFNULL(PROCEDIMENTO.FrequenciaDia, '')         || ' ' || "," ||
+                    '"DuracaoDias"'           || ': ' || IFNULL(PROCEDIMENTO.DuracaoDias, '')           || ' ' || "," ||
+                    '"Execucoes"'             || ':[' || IFNULL()
+                '}') AS Procedimentos
+            FROM PRESCRICAO
+            INNER JOIN DEPENDENTE
+                ON DEPENDENTE.CodigoDependente = PRESCRICAO.CodigoDependente
+            INNER JOIN PROCEDIMENTO
+                ON PROCEDIMENTO.CodigoPrescricao = PRESCRICAO.CodigoPrescricao
+            INNER JOIN EXECUCAO
+                ON EXECUCAO.CodigoProcedimento = PROCEDIMENTO.CodigoProcedimento
+            GROUP BY PRESCRICAO.CodigoPrescricao
+            `
     }
 ]
 export default presets

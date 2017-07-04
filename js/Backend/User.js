@@ -143,6 +143,25 @@ export default class User {
                 return this
         }
     }
+    
+    static Contratos = {
+        Status: {
+            PENDENTE_CUIDADOR: "PENDENTE_CUIDADOR",
+            PENDENTE_RESPONSAVEL: "PENDENTE_RESPONSAVEL",
+            ACEITO: "ACEITO",
+            CANCELADO: "CANCELADO"
+        },
+        async Novo(db, { CodigoUsuarioCuidador, CodigoDependente, Requerente }) {
+            return await db.run(`INSERT INTO CONTRATO (CodigoUsuarioCuidador, CodigoDependente, Status)
+                VALUES (${CodigoUsuarioCuidador},${CodigoDependente},"${Requerente}");`)
+        },
+        async Aceitar(db, { CodigoContrato }) {
+            return await db.run(`UPDATE CONTRATO SET Status="${User.Contratos.Status.ACEITO}";`)
+        },
+        async CancelarRejeitar(db, { CodigoContrato }) {
+            return await db.run(`UPDATE CONTRATO SET Status="${User.Contratos.Status.CANCELADO}"`)
+        }
+    }
 }
 
 const getDiffsRegistros = (registrosA, registrosB, nomeChave) => {
@@ -202,7 +221,7 @@ export function ResponsavelDecorator( userContext ) {
             CodigoUsuario: userContext.getCodigoUsuario(), NomeDependente, Observacoes
         })
         if (Prescricoes.length) {
-            let { CodigoDependente } = await userContext.db.run("SELECT last_insert_rowid() AS CodigoDependente").rows.shift()
+            let { CodigoDependente } = (await userContext.db.run("SELECT last_insert_rowid() AS CodigoDependente")).rows.shift()
             for (Prescricao of Prescricoes) {
                 await userContext.db.run(`INSERT INTO PRESCRICAO (
                     NomeMedico, CRM, CodigoDependente, DataPrescricao
@@ -212,7 +231,7 @@ export function ResponsavelDecorator( userContext ) {
                     ${CodigoDependente},
                     '${Prescricao.DataPrescricao}'
                 );`)
-                let { CodigoPrescricao } = await userContext.db.run("SELECT last_insert_rowid() AS CodigoPrescricao").rows.shift()
+                let { CodigoPrescricao } = (await userContext.db.run("SELECT last_insert_rowid() AS CodigoPrescricao")).rows.shift()
                 let batchSQL = Prescricao.Procedimentos.map(Procedimento => `INSERT INTO PROCEDIMENTO (
                     DescricaoProcedimento, CodigoPrescricao, FrequenciaDia, DuracaoDias
                 ) VALUES (
@@ -332,6 +351,14 @@ export function CuidadorDecorator( userContext ) {
             CodigoUsuario: userContext.getCodigoUsuario(),
             CodigoEspecialidade
         }))
+    }
+
+    userContext.registrarExecucao = async({
+        CodigoProcedimento, DataExecucao, HoraExecucao,
+        Comentarios, DescricaoProcedimento
+    }) => {
+        return await userContext.db.run(`INSERT INTO EXECUCAO (CodigoProcedimento, DataExecucao, HoraExecucao, Comentarios, DescricaoProcedimento)
+            VALUES (${CodigoProcedimento},"${DataExecucao}","${HoraExecucao}","${Comentarios}","${DescricaoProcedimento}");`)
     }
 
     return userContext
