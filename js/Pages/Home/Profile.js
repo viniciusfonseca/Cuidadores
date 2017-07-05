@@ -98,12 +98,12 @@ class Profile extends React.Component {
         let dataUserBackend = (await this.props.db.fetchData(PRESETS_ID.USER_VIEW, {
             CodigoUsuario: this.user.CodigoUsuario
         })).rows[0]
-        // Alert.alert("user", JSON.stringify( dataUserBackend ))
+        Alert.alert("user", JSON.stringify( dataUserBackend ))
         this.user = Object.assign({}, this.user, dataUserBackend)
         parseFields.forEach(field => {
             try {
                 this.user[field] = this.user[field] || '[]'
-                this.user[field] = JSON.parse(this.user[field])
+                this.user[field] = JSON.parse(this.user[field]) || []
             }
             catch(e) {
                 this.user[field] = []
@@ -164,7 +164,10 @@ class Profile extends React.Component {
                         oferecerServicoDependente: mkWrapper(context, 'oferecerServicoDependente'),
                         apagaDependente:           mkWrapper(context, 'apagaDependente')
                     }
-                    case '2': return {}
+                    case '2': return {
+                        aceitarProposta:           mkWrapper(context, 'aceitarProposta'),
+                        cancelarContratoProposta:  mkWrapper(context, 'cancelarContratoProposta')
+                    }
                     case '3': return {
                         showEspecialidadesModal:   mkWrapper(context, 'showEspecialidadesModal'),
                         adicionaEspecialidade:     mkWrapper(context, 'adicionaEspecialidade'),
@@ -305,7 +308,7 @@ class Profile extends React.Component {
             ])
         }
         const apagaProcedimento = (contextoPrescricao, contextoProcedimento) => {
-            contextoPrescricao.Procedimentos = contextoPrescricao.Procedimentos.filter(p !== contextoProcedimento)
+            contextoPrescricao.Procedimentos = contextoPrescricao.Procedimentos.filter(p => p !== contextoProcedimento)
             this.forceUpdate()
         }
         return (
@@ -403,17 +406,17 @@ class Profile extends React.Component {
                                                             style={{ flex: 1 }}
                                                                 label="Descrição"
                                                                 defaultValue={Procedimento.DescricaoProcedimento}
-                                                                onChange={val => Procedimento.DescricaoPrescricao = val} />
+                                                                onChange={val => Procedimento.DescricaoProcedimento = val} />
                                                             <View style={_s("flex-row")}>
                                                                 <FormTextField
                                                                     style={{ flex: 1 }}
                                                                     label="Vezes ao dia" type="numeric"
-                                                                    defaultValue={Procedimento.FrequenciaDia || '1'}
+                                                                    defaultValue={String(Procedimento.FrequenciaDia) || '1'}
                                                                     onChange={val => Prescricao.FrequenciaDia = val} />
                                                                 <FormTextField
                                                                     style={{ flex: 1 }}
                                                                     label="Duração em dias" type="numeric"
-                                                                    defaultValue={Procedimento.DuracaoDias || '7'}
+                                                                    defaultValue={String(Procedimento.DuracaoDias) || '7'}
                                                                     onChange={val => Prescricao.DuracaoDias = val} />
                                                             </View>
                                                         </View>
@@ -493,7 +496,7 @@ class Profile extends React.Component {
     renderSelectDepModal() {
         return (
             <Modal
-                isVisible={this.state.modalEspecialidadesVisible} 
+                isVisible={this.state.modalSelectDepVisible} 
                 animationIn="fadeInUp" 
                 animationOut="fadeOutDown">
                 <View style={_s("flex blank", { 'borderRadius': 9, 'margin': 12 })}>
@@ -509,13 +512,13 @@ class Profile extends React.Component {
                     </View>
                     <ScrollView style={{'padding':8}}>
                         <View style={_s("flex-row center-b",{'marginBottom':8})}>
-                            <Text style={_s("flex",{'fontWeight':'bold'})}>Escolha um dependente para este contrato</Text>
+                            <Text style={_s("flex",{'fontWeight':'bold'})}>Escolha um dependente para este contrato:</Text>
                         </View>
                         {
-                            this.optsDependentes.map(Dependente => (
+                            (this.optsDependentes || []).map(Dependente => (
                                 <ListItem key={'depsel-'+Dependente.CodigoDependente}
                                     label={Dependente.NomeDependente}
-                                    onPress={() => this.concluiContratoCuidador(contextoDependente)}/>
+                                    onPress={() => this.concluiContratoCuidador(Dependente)}/>
                             ))
                         }
                     </ScrollView>
@@ -536,12 +539,15 @@ class Profile extends React.Component {
                 onPress: () => this.setState({
                     spinnerVisible: true
                 }, async() => {
-                    const Dependentes = (await this.props.user.db.fetchData(PRESETS_ID.DEPENDENTES, { CodigoUsuario: this.props.user.getCodigoUsuario() })).rows
+                    const Dependentes = (await this.props.user.db.fetchData(PRESETS_ID.DEPENDENTES, {
+                        CodigoUsuario: this.props.user.getCodigoUsuario(),
+                        FiltroContrato: true 
+                    })).rows
+                    this.setState({
+                        spinnerVisible: false
+                    })
                     if (!Dependentes.length) {
                         ToastAndroid.show("Necessário ter um dependente cadastrado para contratar este cuidador", ToastAndroid.SHORT)
-                        this.setState({
-                            spinnerVisible: false
-                        })
                         return
                     }
                     this.optsDependentes = Dependentes
@@ -559,6 +565,14 @@ class Profile extends React.Component {
         })
         ToastAndroid.show("Proposta enviada ao cuidador", ToastAndroid.SHORT)
         this.setState({ modalSelectDepVisible: false })
+    }
+
+    aceitarProposta = async contextoContrato => {
+
+    }
+
+    cancelarContratoProposta = async contextoContrato => {
+
     }
 
     render() {
@@ -710,9 +724,20 @@ class Contratos extends React.Component {
                     </View>
                 )
             ) : (
-                <View>
-                    <Text>TODO: Contratos</Text>
-                </View>
+                this.props.value.map(Contrato => (
+                    <ListItem key={'ct-'+item.CodigoContrato} 
+                        label={`Cuidador: ${item.Nome}`}>
+                        {
+                            this.props.isVisitingOwnProfile && (
+                                <ImprovedTouchable onPress={() => this.props.cancelarContratoProposta(item)}>
+                                    <View>
+                                        <Icon name="circle-with-cross" style={{'fontSize':26,'color':'#000'}} />
+                                    </View>
+                                </ImprovedTouchable>
+                            )
+                        }
+                    </ListItem>
+                ))
             )
         )
     }

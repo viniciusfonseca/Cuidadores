@@ -41,6 +41,7 @@ export default class Database {
         let res = null
         try {
             dbPtr = await SQLite.openDatabase(Database.DB_OPEN_OPTIONS)
+            await dbPtr.executeSql(`PRAGMA foreign_keys = ON;`)
             this._dbPtr = dbPtr
         }
         catch (e) {
@@ -86,13 +87,16 @@ export default class Database {
                 return params[sub]
             }
             let negateFlag = false
+            let literalFlag = false
             if (filterCfg.flags) {
-                negateFlag = filterCfg.flags.includes("negate")
+                negateFlag  = filterCfg.flags.includes("negate")
+                literalFlag = filterCfg.flags.includes("literal")
             }
             if (isUndefined(params[sub]) || !(sub in params)) {
+                if (literalFlag) return ""
                 return !negateFlag ? '1' : '0'
             }
-            return filterCfg.SQL.replace(/<\?>/g, params[sub] || "")
+            return filterCfg.SQL ? filterCfg.SQL.replace(/<\?>/g, params[sub] || "") : params[sub]
         })
         return await this.run(q)
     }

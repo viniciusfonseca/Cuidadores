@@ -168,41 +168,45 @@ const getDiffsRegistros = (registrosA, registrosB, nomeChave) => {
     let kA, kB
     let diffs = []
 
-    registrosA = (registrosA || []).slice().sort((pA, pB) => {
+    registrosA.forEach(r => r[nomeChave] = r[nomeChave] || -1)
+
+    const sortR = (pA, pB) => {
         if (pA[ nomeChave ] <  pB[ nomeChave ]) return -1
         if (pA[ nomeChave ] == pB[ nomeChave ]) return 0
         return 1
-    })
-    registrosB = (registrosB || []).slice().sort((pA, pB) => {
-        if (pA[ nomeChave ] <  pB[ nomeChave ]) return -1
-        if (pA[ nomeChave ] == pB[ nomeChave ]) return 0
-        return 1
-    })
+    }
 
-    let cA = registrosA.map(p => [ p[ nomeChave ] || -1, p ])
-    let cB = registrosB.map(p => [ p[ nomeChave ] || -1, p ])
+    registrosA = (registrosA || []).slice().sort(sortR)
+    registrosB = (registrosB || []).slice().sort(sortR)
 
-    const avancaA = () => kA = cA.shift() || [ Infinity, null ]
-    const avancaB = () => kB = cB.shift() || [ Infinity, null ]
+    let cA = registrosA.map(p => [ p[ nomeChave ], p ])
+    let cB = registrosB.map(p => [ p[ nomeChave ], p ])
+
+    const avancaA = () => kA = (cA.shift() || [ Infinity, null ])
+    const avancaB = () => kB = (cB.shift() || [ Infinity, null ])
 
     avancaA()
     avancaB()
 
+    if (kA[0] == Infinity && kB[0] == Infinity) {
+        return diffs
+    }
+
     do {
         if (kB[0] == -1 || kA[0] > kB[0]) {
-            diffs.push([ 'I', kB, kB[1] ])
+            diffs.push([ 'I', kB[0], kB[1] ])
             avancaB()
         }
         else if (kA[0] == kB[0]) {
-            diffs.push([ 'U', kA, kB[1] ])
+            diffs.push([ 'U', kA[0], kB[1] ])
             avancaA()
             avancaB()
         }
         else {
-            diffs.push([ 'D', kA, kA[1] ])
+            diffs.push([ 'D', kA[0], kA[1] ])
             avancaA()
         }
-    } while (registrosA.length || registrosB.length)
+    } while (kA[0] != Infinity || kB[0] != Infinity)
 
     return diffs
 }
@@ -218,29 +222,31 @@ export function ResponsavelDecorator( userContext ) {
 
     userContext.criarDependente = async({ NomeDependente, Observacoes, Prescricoes = [] }) => {
         await userContext.db.fetchData(PRESETS_ID.CREATE_DEPENDENTE, {
-            CodigoUsuario: userContext.getCodigoUsuario(), NomeDependente, Observacoes
+            CodigoUsuario: userContext.getCodigoUsuario(), NomeDependente, Observacoes: Observacoes || ""
         })
         if (Prescricoes.length) {
-            let { CodigoDependente } = (await userContext.db.run("SELECT last_insert_rowid() AS CodigoDependente")).rows.shift()
-            for (Prescricao of Prescricoes) {
+            // Alert.alert("Prescricoes", JSON.stringify(Prescricoes))
+            let { CodigoDependente } = (await userContext.db.run("SELECT MAX(CodigoDependente) AS CodigoDependente FROM DEPENDENTE;")).rows.shift()
+            return Prescricoes.map(Prescricao => async() => {
                 await userContext.db.run(`INSERT INTO PRESCRICAO (
                     NomeMedico, CRM, CodigoDependente, DataPrescricao
                 ) VALUES (
-                    '${Prescricao.NomeMedico}',
-                    '${Prescricao.CRM}',
+                    '${Prescricao.NomeMedico || ""}',
+                    '${Prescricao.CRM || ""}',
                     ${CodigoDependente},
-                    '${Prescricao.DataPrescricao}'
+                    '${Prescricao.DataPrescricao || ""}'
                 );`)
-                let { CodigoPrescricao } = (await userContext.db.run("SELECT last_insert_rowid() AS CodigoPrescricao")).rows.shift()
+                let { CodigoPrescricao } = (await userContext.db.run("SELECT MAX(CodigoPrescricao) AS CodigoPrescricao FROM PRESCRICAO;")).rows.shift()
                 let batchSQL = Prescricao.Procedimentos.map(Procedimento => `INSERT INTO PROCEDIMENTO (
                     DescricaoProcedimento, CodigoPrescricao, FrequenciaDia, DuracaoDias
                 ) VALUES (
-                    '${Procedimento.DescricaoProcedimento}',
+                    '${Procedimento.DescricaoProcedimento || ""}',
                     ${CodigoPrescricao},
-                    ${Procedimento.FrequenciaDia},
-                    ${Procedimento.DuracaoDias};`)
+                    ${Procedimento.FrequenciaDia || "0"},
+                    ${Procedimento.DuracaoDias || "0"}
+                );`)
                 await Promise.all( batchSQL.map(sql => userContext.db.run(sql)) )
-            }
+            }).reduce((ps, p) => ps.then(p), Promise.resolve())
         }
         return await userContext.obterDependentes()
     }
@@ -286,8 +292,8 @@ export function ResponsavelDecorator( userContext ) {
         )
 
         const diffsProcedimentos = getDiffsRegistros(
-            [].concat(prescricoesAnteriores.map(Prescricao => Prescricao.Procedimentos || [])),
-            [].concat(Prescricoes.map(Prescricao => Prescricao.Procedimentos || [])),
+            [].concat.apply([], prescricoesAnteriores.map(Prescricao => Prescricao.Procedimentos || [])),
+            [].concat.apply([], Prescricoes.map(Prescricao => Prescricao.Procedimentos || [])),
             'CodigoProcedimento'
         )
         let batchSQLProcedimentos = diffsProcedimentos.map(([op, CodigoProcedimento, Procedimento]) => {
@@ -303,7 +309,7 @@ export function ResponsavelDecorator( userContext ) {
                     );`
                 case 'U':
                     return `UPDATE PROCEDIMENTO SET
-                        DescricaoProcedimento='${Procedimento.DescricaoProcedimento}'
+                        DescricaoProcedimento='${Procedimento.DescricaoProcedimento}',
                         FrequenciaDia=${Procedimento.FrequenciaDia},
                         DuracaoDias=${Procedimento.DuracaoDias}
                         WHERE PROCEDIMENTO.CodigoProcedimento=${CodigoProcedimento};`

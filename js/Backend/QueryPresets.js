@@ -119,18 +119,18 @@ const presets = [
                                 DEPENDENTE.NomeDependente,
                                 DEPENDENTE.Observacoes,
                                 GROUP_CONCAT('{' ||
-                                    '"CodigoPrescricao"' || ': '  || PRESCRICAO.CodigoPrescricao             || ' ' || "," ||
-                                    '"NomeMedico"'       || ':"'  || IFNULL(PRESCRICAO.NomeMedico, '')       || '"' || "," ||
-                                    '"CRM"'              || ':"'  || IFNULL(PRESCRICAO.CRM, '')              || '"' || "," ||
-                                    '"DataPrescricao"'   || ':"'  || IFNULL(PRESCRICAO.DataPrescricao, '')   || '"' || "," ||
-                                    '"Procedimentos"'    || ':['  || IFNULL(PROCEDIMENTOS.Procedimentos, '') || ']' ||
+                                    '"CodigoPrescricao"' || ': '  || PRESCRICAO.CodigoPrescricao              || ' ' || "," ||
+                                    '"NomeMedico"'       || ':"'  || IFNULL(PRESCRICAO.NomeMedico, '')        || '"' || "," ||
+                                    '"CRM"'              || ':"'  || IFNULL(PRESCRICAO.CRM, '')               || '"' || "," ||
+                                    '"DataPrescricao"'   || ':"'  || IFNULL(PRESCRICAO.DataPrescricao, '')    || '"' || "," ||
+                                    '"Procedimentos"'    || ':['  || IFNULL(PROCEDIMENTOS.Procedimentos, '')  || ']' ||
                                 '}') AS Prescricoes
                             FROM DEPENDENTE
                             LEFT JOIN PRESCRICAO
                                 ON PRESCRICAO.CodigoDependente = DEPENDENTE.CodigoDependente
                             LEFT JOIN (
                                 SELECT PROCEDIMENTO.CodigoPrescricao,
-                                GROUP_CONCAT('{' ||
+                                ('{' ||
                                     '"CodigoProcedimento"'    || ': ' || PROCEDIMENTO.CodigoProcedimento                || ' ' || "," ||
                                     '"DescricaoProcedimento"' || ':"' || IFNULL(PROCEDIMENTO.DescricaoProcedimento, '') || '"' || "," ||
                                     '"CodigoPrescricao"'      || ': ' || IFNULL(PROCEDIMENTO.CodigoPrescricao, '')      || ' ' || "," ||
@@ -209,7 +209,18 @@ const presets = [
                 FROM DEPENDENTE
                 WHERE DEPENDENTE.CodigoUsuario = <CodigoUsuario>
                     AND DEPENDENTE.NomeDependente <> ''
-                ORDER BY DEPENDENTE.CodigoDependente DESC`
+                    AND <FiltroContrato>
+                ORDER BY DEPENDENTE.CodigoDependente DESC`,
+        filters: [
+            {
+                "name": "FiltroContrato",
+                "SQL": `NOT EXISTS (
+                    SELECT 1 FROM CONTRATO 
+                    WHERE CONTRATO.CodigoDependente = DEPENDENTE.CodigoDependente
+                    AND CONTRATO.Status NOT IN ("PENDENTE_CUIDADOR", "PENDENTE_RESPONSAVEL")
+                )`
+            }
+        ]
     },
     {
         id: PRESETS_ID.CREATE_DEPENDENTE,
@@ -218,14 +229,27 @@ const presets = [
         )
         VALUES (
             '<NomeDependente>', <CodigoUsuario>, '<Observacoes>'
-        )`
+        )`,
+        filters: [
+            {
+                "name": "Observacoes",
+                "flags": ["literal"]
+            }
+        ]
     },
     {
         id: PRESETS_ID.UPDATE_DEPENDENTE,
         base: `UPDATE DEPENDENTE 
                 SET 
-                    NomeDependente = '<NomeDependente>'
-                WHERE DEPENDENTE.CodigoDependente = '<CodigoDependente>'`
+                    NomeDependente = '<NomeDependente>',
+                    Observacoes = '<Observacoes>'
+                WHERE DEPENDENTE.CodigoDependente = '<CodigoDependente>'`,
+        filters: [
+            {
+                "name": "Observacoes",
+                "flags": ["literal"]
+            }
+        ]
     },
     {
         id: PRESETS_ID.DELETE_DEPENDENTE,
@@ -251,7 +275,7 @@ const presets = [
                     '"CodigoPrescricao"'      || ': ' || IFNULL(PROCEDIMENTO.CodigoPrescricao, '')      || ' ' || "," ||
                     '"FrequenciaDia"'         || ': ' || IFNULL(PROCEDIMENTO.FrequenciaDia, '')         || ' ' || "," ||
                     '"DuracaoDias"'           || ': ' || IFNULL(PROCEDIMENTO.DuracaoDias, '')           || ' ' || "," ||
-                    '"Execucoes"'             || ':[' || IFNULL()
+                    '"Execucoes"'             || ':[' || IFNULL(PROCEDIMENTO.)
                 '}') AS Procedimentos
             FROM PRESCRICAO
             INNER JOIN DEPENDENTE
