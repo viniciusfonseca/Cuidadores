@@ -145,6 +145,11 @@ export default class User {
     }
     
     static Contratos = {
+        Actions: {
+            ACEITAR:  'ACEITAR',
+            RECUSAR:  'RECUSAR',
+            CANCELAR: 'CANCELAR'
+        },
         Status: {
             PENDENTE_CUIDADOR: "PENDENTE_CUIDADOR",
             PENDENTE_RESPONSAVEL: "PENDENTE_RESPONSAVEL",

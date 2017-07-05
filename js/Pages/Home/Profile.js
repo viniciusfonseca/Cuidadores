@@ -98,7 +98,7 @@ class Profile extends React.Component {
         let dataUserBackend = (await this.props.db.fetchData(PRESETS_ID.USER_VIEW, {
             CodigoUsuario: this.user.CodigoUsuario
         })).rows[0]
-        Alert.alert("user", JSON.stringify( dataUserBackend ))
+        // Alert.alert("user", JSON.stringify( dataUserBackend ))
         this.user = Object.assign({}, this.user, dataUserBackend)
         parseFields.forEach(field => {
             try {
@@ -724,20 +724,58 @@ class Contratos extends React.Component {
                     </View>
                 )
             ) : (
-                this.props.value.map(Contrato => (
-                    <ListItem key={'ct-'+item.CodigoContrato} 
-                        label={`Cuidador: ${item.Nome}`}>
-                        {
-                            this.props.isVisitingOwnProfile && (
-                                <ImprovedTouchable onPress={() => this.props.cancelarContratoProposta(item)}>
-                                    <View>
-                                        <Icon name="circle-with-cross" style={{'fontSize':26,'color':'#000'}} />
-                                    </View>
-                                </ImprovedTouchable>
-                            )
-                        }
-                    </ListItem>
-                ))
+                <ScrollView style={_s("flex", {paddingHorizontal:12})}>
+                    {
+                        contratosPendentes.length ? (
+                            <View>
+                                <View style={_s("flex-row center-b",{'marginBottom':8})}>
+                                    <Text style={_s("flex",{'fontWeight':'bold'})}>Contratos pendentes de aceitação</Text>
+                                </View>
+                                {
+                                    contratosPendentes.map(Contrato => (
+                                        <ListItem key={'ct-'+Contrato.CodigoContrato} 
+                                            label={`Cuidador: ${Contrato.Nome}`}>
+                                            {
+                                                this.props.isVisitingOwnProfile ? (
+                                                    <ImprovedTouchable onPress={() => this.props.cancelarContratoProposta(Contrato, 'RECUSAR')}>
+                                                        <View>
+                                                            <Icon name="circle-with-cross" style={{'fontSize':26,'color':'#000'}} />
+                                                        </View>
+                                                    </ImprovedTouchable>
+                                                ): null
+                                            }
+                                        </ListItem>
+                                    ))
+                                }
+                            </View>
+                        ): null
+                    }
+                    {
+                        contratosAceitos.length ? (
+                            <View>
+                                <View style={_s("flex-row center-b",{'marginBottom':8})}>
+                                    <Text style={_s("flex",{'fontWeight':'bold'})}>Contratos pendentes de aceitação</Text>
+                                </View>
+                                {
+                                    contratosPendentes.map(Contrato => (
+                                        <ListItem key={'ct-'+Contrato.CodigoContrato} 
+                                            label={`Cuidador: ${Contrato.Nome}`}>
+                                            {
+                                                this.props.isVisitingOwnProfile ? (
+                                                    <ImprovedTouchable onPress={() => this.props.cancelarContratoProposta(Contrato, 'CANCELAR')}>
+                                                        <View>
+                                                            <Icon name="circle-with-cross" style={{'fontSize':26,'color':'#000'}} />
+                                                        </View>
+                                                    </ImprovedTouchable>
+                                                ): null
+                                            }
+                                        </ListItem>
+                                    ))
+                                }
+                            </View>
+                        ): null
+                    }
+                </ScrollView>
             )
         )
     }
@@ -784,7 +822,7 @@ class Especialidades extends React.Component {
                 </View>
             )
         ) : (
-            <View style={_s("flex", {paddingHorizontal:12})}>
+            <ScrollView style={_s("flex", {paddingHorizontal:12})}>
                 {
                     this.props.isVisitingOwnProfile && (
                         <ImprovedTouchable onPress={ this.props.showEspecialidadesModal }>
@@ -798,7 +836,7 @@ class Especialidades extends React.Component {
                     )
                 }
                 { this.props.value.map(this.renderItem) }
-            </View>
+            </ScrollView>
         )
     }
 }
