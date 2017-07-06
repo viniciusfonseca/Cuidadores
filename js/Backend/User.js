@@ -174,6 +174,7 @@ const getDiffsRegistros = (registrosA, registrosB, nomeChave) => {
     let diffs = []
 
     registrosA.forEach(r => r[nomeChave] = r[nomeChave] || -1)
+    registrosB.forEach(r => r[nomeChave] = r[nomeChave] || -1)
 
     const sortR = (pA, pB) => {
         if (pA[ nomeChave ] <  pB[ nomeChave ]) return -1
@@ -187,8 +188,8 @@ const getDiffsRegistros = (registrosA, registrosB, nomeChave) => {
     let cA = registrosA.map(p => [ p[ nomeChave ], p ])
     let cB = registrosB.map(p => [ p[ nomeChave ], p ])
 
-    const avancaA = () => kA = (cA.shift() || [ Infinity, null ])
-    const avancaB = () => kB = (cB.shift() || [ Infinity, null ])
+    const avancaA = () => kA = (cA.shift() || Infinity)
+    const avancaB = () => kB = (cB.shift() || Infinity)
 
     avancaA()
     avancaB()
@@ -197,7 +198,7 @@ const getDiffsRegistros = (registrosA, registrosB, nomeChave) => {
         return diffs
     }
 
-    do {
+    while (kA[0] != Infinity || kB[0] != Infinity) {
         if (kB[0] == -1 || kA[0] > kB[0]) {
             diffs.push([ 'I', kB[0], kB[1] ])
             avancaB()
@@ -211,7 +212,7 @@ const getDiffsRegistros = (registrosA, registrosB, nomeChave) => {
             diffs.push([ 'D', kA[0], kA[1] ])
             avancaA()
         }
-    } while (kA[0] != Infinity || kB[0] != Infinity)
+    }
 
     return diffs
 }

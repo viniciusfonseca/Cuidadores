@@ -155,6 +155,8 @@ class Profile extends React.Component {
         return React.createElement(
             componentClass,
             Object.assign({
+                user: this.props.user,
+                userView: this.user,
                 value: this.user[ key ],
                 isVisitingOwnProfile: this.isVisitingOwnProfile
             }, (( context ) => {
@@ -443,7 +445,9 @@ class Profile extends React.Component {
     buscaEspecialidades = async() => {
         let res = null
         try {
-            res = await this.props.db.fetchData(PRESETS_ID.ESPECIALIDADES)
+            res = await this.props.db.fetchData(PRESETS_ID.ESPECIALIDADES, {
+                FiltrarEspecialidades: this.user.Especialidades.map(Especialidade => Especialidade.CodigoEspecialidade).join()
+            })
             this.especialidades = res.rows
         }
         catch(e) {
@@ -452,7 +456,7 @@ class Profile extends React.Component {
     }
 
     adicionaEspecialidade = async contextoEspecialidade => {
-        await this.props.user.adicionaEspecialidade( contextoEspecialidade )
+        await this.props.user.adicionarEspecialidade( contextoEspecialidade )
         this.setState({ modalEspecialidadesVisible: false }, this.reload.bind(this))
     }
 
@@ -547,7 +551,7 @@ class Profile extends React.Component {
                         spinnerVisible: false
                     })
                     if (!Dependentes.length) {
-                        ToastAndroid.show("Necessário ter um dependente cadastrado para contratar este cuidador", ToastAndroid.SHORT)
+                        ToastAndroid.show("Necessário ter um dependente cadastrado e sem propostas para contratar este cuidador", ToastAndroid.SHORT)
                         return
                     }
                     this.optsDependentes = Dependentes
@@ -568,11 +572,34 @@ class Profile extends React.Component {
     }
 
     aceitarProposta = async contextoContrato => {
-
+        await this.props.user.db.run(`UPDATE CONTRATO SET Status = '${User.Contratos.Status.ACEITO}'
+            WHERE CONTRATO.CodigoContrato = ${contextoContrato.CodigoContrato};`)
+        contextoContrato.Status = User.Contratos.Status.ACEITO
+        this.forceUpdate()
     }
 
-    cancelarContratoProposta = async contextoContrato => {
-
+    cancelarContratoProposta = (contextoContrato, mode) => {
+        if (mode == User.Contratos.Actions.CANCELAR) {
+            Alert.alert("Contratar Cuidador", "Deseja cancelar este contrato?", [
+                {
+                    text: 'Não',
+                    onPress: noop
+                },
+                {
+                    text: 'Sim',
+                    onPress: () => execAction()
+                }
+            ])
+        }
+        else {
+            execAction()
+        }
+        const execAction = async () => {
+            await this.props.user.db.run(`UPDATE CONTRATO SET Status = '${User.Contratos.Status.CANCELADO}'
+                WHERE CONTRATO.CodigoContrato = ${contextoContrato.CodigoContrato};`)
+            this.user.Contratos = this.user.Contratos.filter(c => c.CodigoContrato !== contextoContrato.CodigoContrato)
+            this.forceUpdate()
+        } 
     }
 
     render() {
@@ -728,22 +755,43 @@ class Contratos extends React.Component {
                     {
                         contratosPendentes.length ? (
                             <View>
-                                <View style={_s("flex-row center-b",{'marginBottom':8})}>
+                                <View style={_s("flex-row center-b",{'marginVertical':8})}>
                                     <Text style={_s("flex",{'fontWeight':'bold'})}>Contratos pendentes de aceitação</Text>
                                 </View>
                                 {
                                     contratosPendentes.map(Contrato => (
                                         <ListItem key={'ct-'+Contrato.CodigoContrato} 
-                                            label={`Cuidador: ${Contrato.Nome}`}>
-                                            {
-                                                this.props.isVisitingOwnProfile ? (
-                                                    <ImprovedTouchable onPress={() => this.props.cancelarContratoProposta(Contrato, 'RECUSAR')}>
-                                                        <View>
-                                                            <Icon name="circle-with-cross" style={{'fontSize':26,'color':'#000'}} />
+                                            label={ this.props.user.fields.Tipo == User.USER_TYPE.RESPONSAVEL ? 
+                                                `Cuidador: ${Contrato.NomeContratante} | Dependente: ${Contrato.NomeDependente}` :
+                                                `Responsável: ${Contrato.NomeResponsavel} | Dependente: ${Contrato.NomeDependente}`
+                                            }>
+                                                {
+                                                    (
+                                                        (this.props.user.fields.Tipo == User.USER_TYPE.RESPONSAVEL && Contrato.Status == User.Contratos.Status.PENDENTE_CUIDADOR) ||
+                                                        (this.props.user.fields.Tipo == User.USER_TYPE.CUIDADOR    && Contrato.Status == User.Contratos.Status.PENDENTE_RESPONSAVEL)
+                                                    ) ? (
+                                                        <View style={_s("flex-row")}>
+                                                            <ImprovedTouchable onPress={() => this.props.aceitarProposta(Contrato, User.Contratos.Actions.ACEITAR)}>
+                                                                <View style={{ marginRight: 9 }}>
+                                                                    <Text> Aceitar </Text>
+                                                                </View>
+                                                            </ImprovedTouchable>
+                                                            <ImprovedTouchable onPress={() => this.props.cancelarContratoProposta(Contrato, User.Contratos.Actions.RECUSAR)}>
+                                                                <View>
+                                                                    <Text> Recusar </Text>
+                                                                </View>
+                                                            </ImprovedTouchable>
                                                         </View>
-                                                    </ImprovedTouchable>
-                                                ): null
-                                            }
+                                                    ) : (
+                                                        <View>
+                                                            <ImprovedTouchable onPress={() => this.props.cancelarContratoProposta(Contrato, User.Contratos.Actions.RECUSAR)}>
+                                                                <View>
+                                                                    <Text> Cancelar </Text>
+                                                                </View>
+                                                            </ImprovedTouchable>
+                                                        </View>
+                                                    )
+                                                }
                                         </ListItem>
                                     ))
                                 }
@@ -753,18 +801,20 @@ class Contratos extends React.Component {
                     {
                         contratosAceitos.length ? (
                             <View>
-                                <View style={_s("flex-row center-b",{'marginBottom':8})}>
-                                    <Text style={_s("flex",{'fontWeight':'bold'})}>Contratos pendentes de aceitação</Text>
+                                <View style={_s("flex-row center-b",{'marginVertical':8})}>
+                                    <Text style={_s("flex",{'fontWeight':'bold'})}>Contratos efetivados</Text>
                                 </View>
                                 {
-                                    contratosPendentes.map(Contrato => (
-                                        <ListItem key={'ct-'+Contrato.CodigoContrato} 
-                                            label={`Cuidador: ${Contrato.Nome}`}>
+                                    contratosAceitos.map(Contrato => (
+                                        <ListItem key={'cta-'+Contrato.CodigoContrato} 
+                                            label={ this.props.user.fields.Tipo == User.USER_TYPE.RESPONSAVEL ? 
+                                                `Cuidador: ${Contrato.NomeContratante} | Dependente: ${Contrato.NomeDependente}` :
+                                                `Responsável: ${Contrato.NomeResponsavel} | Dependente: ${Contrato.NomeDependente}`}>
                                             {
                                                 this.props.isVisitingOwnProfile ? (
-                                                    <ImprovedTouchable onPress={() => this.props.cancelarContratoProposta(Contrato, 'CANCELAR')}>
+                                                    <ImprovedTouchable onPress={() => this.props.cancelarContratoProposta(Contrato, User.Contratos.Actions.CANCELAR)}>
                                                         <View>
-                                                            <Icon name="circle-with-cross" style={{'fontSize':26,'color':'#000'}} />
+                                                            <Text>Cancelar</Text>
                                                         </View>
                                                     </ImprovedTouchable>
                                                 ): null

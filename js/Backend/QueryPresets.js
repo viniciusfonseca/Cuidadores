@@ -130,7 +130,7 @@ const presets = [
                                 ON PRESCRICAO.CodigoDependente = DEPENDENTE.CodigoDependente
                             LEFT JOIN (
                                 SELECT PROCEDIMENTO.CodigoPrescricao,
-                                ('{' ||
+                                GROUP_CONCAT('{' ||
                                     '"CodigoProcedimento"'    || ': ' || PROCEDIMENTO.CodigoProcedimento                || ' ' || "," ||
                                     '"DescricaoProcedimento"' || ':"' || IFNULL(PROCEDIMENTO.DescricaoProcedimento, '') || '"' || "," ||
                                     '"CodigoPrescricao"'      || ': ' || IFNULL(PROCEDIMENTO.CodigoPrescricao, '')      || ' ' || "," ||
@@ -138,6 +138,7 @@ const presets = [
                                     '"DuracaoDias"'           || ': ' || IFNULL(PROCEDIMENTO.DuracaoDias, '')           || ' ' || 
                                 '}') AS Procedimentos
                                 FROM PROCEDIMENTO
+                                GROUP BY PROCEDIMENTO.CodigoPrescricao
                             ) AS PROCEDIMENTOS
                                 ON PROCEDIMENTOS.CodigoPrescricao = PRESCRICAO.CodigoPrescricao
                             WHERE DEPENDENTE.CodigoUsuario = USUARIO.CodigoUsuario
@@ -154,6 +155,7 @@ const presets = [
                                 '"CodigoContrato"'  || ':"' || CONTRATO.CodigoContrato        || '"' || "," ||
                                 '"CodigoUsuario"'   || ':"' || CONTRATO.CodigoUsuarioCuidador || '"' || "," ||
                                 '"NomeContratante"' || ':"' || USUARIOS.Nome                  || '"' || "," ||
+                                '"NomeResponsavel"' || ':"' || USUARIOS_1.Nome                || '"' || "," ||
                                 '"NomeDependente"'  || ':"' || DEPENDENTE.NomeDependente      || '"' || "," ||
                                 '"Status"'          || ':"' || CONTRATO.Status                || '"' ||
                             '}') ||
@@ -164,6 +166,11 @@ const presets = [
                             FROM USUARIO
                         ) AS USUARIOS
                             ON USUARIOS.CodigoUsuario = CONTRATO.CodigoUsuarioCuidador
+                        INNER JOIN (
+                            SELECT USUARIO.CodigoUsuario, USUARIO.Nome
+                            FROM USUARIO
+                        ) AS USUARIOS_1
+                            ON USUARIOS_1.CodigoUsuario = DEPENDENTE.CodigoUsuario
                         INNER JOIN DEPENDENTE
                             ON CONTRATO.CodigoDependente = DEPENDENTE.CodigoDependente
                         WHERE CASE WHEN USUARIO.Tipo = 0
@@ -199,7 +206,14 @@ const presets = [
         id: PRESETS_ID.ESPECIALIDADES,
         base: `SELECT ESPECIALIDADE.CodigoEspecialidade, 
                     ESPECIALIDADE.DescricaoEspecialidade 
-                FROM ESPECIALIDADE`
+                FROM ESPECIALIDADE
+                WHERE <FiltrarEspecialidades>;`,
+        filters: [
+            {
+                "name": "FiltrarEspecialidades",
+                "SQL": "ESPECIALIDADE.CodigoEspecialidade NOT IN (<?>)"
+            }
+        ]
     },
 
     {
@@ -217,7 +231,7 @@ const presets = [
                 "SQL": `NOT EXISTS (
                     SELECT 1 FROM CONTRATO 
                     WHERE CONTRATO.CodigoDependente = DEPENDENTE.CodigoDependente
-                    AND CONTRATO.Status NOT IN ("PENDENTE_CUIDADOR", "PENDENTE_RESPONSAVEL")
+                    AND CONTRATO.Status IN ("PENDENTE_CUIDADOR", "PENDENTE_RESPONSAVEL", "ACEITO")
                 )`
             }
         ]
@@ -268,24 +282,54 @@ const presets = [
     },
     {
         id: PRESETS_ID.CONTRATOS_PROCEDIMENTOS_EXECUCOES,
-        base: `SELECT PRESCRICAO.CodigoPrescricao,
-                GROUP_CONCAT('{' ||
-                    '"CodigoProcedimento"'    || ': ' || PROCEDIMENTO.CodigoProcedimento                || ' ' || "," ||
-                    '"DescricaoProcedimento"' || ':"' || IFNULL(PROCEDIMENTO.DescricaoProcedimento, '') || '"' || "," ||
-                    '"CodigoPrescricao"'      || ': ' || IFNULL(PROCEDIMENTO.CodigoPrescricao, '')      || ' ' || "," ||
-                    '"FrequenciaDia"'         || ': ' || IFNULL(PROCEDIMENTO.FrequenciaDia, '')         || ' ' || "," ||
-                    '"DuracaoDias"'           || ': ' || IFNULL(PROCEDIMENTO.DuracaoDias, '')           || ' ' || "," ||
-                    '"Execucoes"'             || ':[' || IFNULL(PROCEDIMENTO.)
-                '}') AS Procedimentos
-            FROM PRESCRICAO
-            INNER JOIN DEPENDENTE
-                ON DEPENDENTE.CodigoDependente = PRESCRICAO.CodigoDependente
-            INNER JOIN PROCEDIMENTO
-                ON PROCEDIMENTO.CodigoPrescricao = PRESCRICAO.CodigoPrescricao
-            INNER JOIN EXECUCAO
-                ON EXECUCAO.CodigoProcedimento = PROCEDIMENTO.CodigoProcedimento
-            GROUP BY PRESCRICAO.CodigoPrescricao
+        base: `SELECT DEPENDENTE.CodigoDependente,
+                DEPENDENTE.NomeDependente,
+                (SELECT '[' ||
+                    GROUP_CONCAT('{' ||
+                        '"CodigoPrescricao"' || ': '  || PRESCRICAO.CodigoPrescricao              || ' ' || "," ||
+                        '"NomeMedico"'       || ':"'  || IFNULL(PRESCRICAO.NomeMedico, '')        || '"' || "," ||
+                        '"CRM"'              || ':"'  || IFNULL(PRESCRICAO.CRM, '')               || '"' || "," ||
+                        '"DataPrescricao"'   || ':"'  || IFNULL(PRESCRICAO.DataPrescricao, '')    || '"' || "," ||
+                        '"Procedimentos"'    || ':['  || IFNULL(PROCEDIMENTOS.Procedimentos, '')  || ']' ||
+                    '}') || ']'
+                    FROM PRESCRICAO
+                    LEFT JOIN (
+                        SELECT PROCEDIMENTO.CodigoPrescricao,
+                        GROUP_CONCAT('{' ||
+                            '"CodigoProcedimento"'    || ': ' || PROCEDIMENTO.CodigoProcedimento                || ' ' || "," ||
+                            '"DescricaoProcedimento"' || ':"' || IFNULL(PROCEDIMENTO.DescricaoProcedimento, '') || '"' || "," ||
+                            '"CodigoPrescricao"'      || ': ' || IFNULL(PROCEDIMENTO.CodigoPrescricao, '')      || ' ' || "," ||
+                            '"FrequenciaDia"'         || ': ' || IFNULL(PROCEDIMENTO.FrequenciaDia, '')         || ' ' || "," ||
+                            '"DuracaoDias"'           || ': ' || IFNULL(PROCEDIMENTO.DuracaoDias, '')           || ' ' || "," ||
+                            '"Execucoes"'             || ':[' || IFNULL(EXECUCOES.Execucoes, '')                || ']' ||
+                        '}') AS Procedimentos
+                        FROM PROCEDIMENTO
+                        LEFT JOIN (
+                            SELECT EXECUCAO_PROCEDIMENTO.CodigoProcedimento,
+                            GROUP_CONCAT('{' ||
+                                '"DataExecucao"' || ':"' || IFNULL(EXECUCAO_PROCEDIMENTO.DataExecucao, '') || '"' || "," ||
+                                '"HoraExecucao"' || ':"' || IFNULL(EXECUCAO_PROCEDIMENTO.HoraExecucao, '') || '"' || "," ||
+                                '"Comentarios"'  || ':"' || IFNULL(EXECUCAO_PROCEDIMENTO.Comentarios, '')  || '"' ||
+                            '}') AS Execucoes
+                            FROM EXECUCAO_PROCEDIMENTO
+                            WHERE EXECUCAO_PROCEDIMENTO.CodigoUsuario = <CodigoUsuarioCuidador>
+                            GROUP BY EXECUCAO_PROCEDIMENTO.CodigoProcedimento
+                        ) AS EXECUCOES
+                            ON EXECUCOES.CodigoProcedimento = PROCEDIMENTO.CodigoProcedimento
+                        GROUP BY PROCEDIMENTO.CodigoPrescricao
+                    ) AS PROCEDIMENTOS
+                        ON PROCEDIMENTOS.CodigoPrescricao = PRESCRICAO.CodigoPrescricao
+                    WHERE PRESCRICAO.CodigoDependente = DEPENDENTE.CodigoDependente
+                    GROUP BY PRESCRICAO.CodigoDependente
+                ) AS Prescricoes
+                FROM DEPENDENTE
+                INNER JOIN CONTRATO
+                    ON DEPENDENTE.CodigoDependente = CONTRATO.CodigoDependente
+                WHERE CONTRATO.CodigoUsuarioCuidador = <CodigoUsuarioCuidador>
+                    AND CONTRATO.Status = "ACEITO"
             `
     }
 ]
 export default presets
+
+

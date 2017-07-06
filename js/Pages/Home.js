@@ -70,17 +70,17 @@ class Sidemenu extends React.Component {
                 </LinearGradient>
                 <ScrollView>
                     <SidemenuOption icon="magnifying-glass"
-                        label={getLabelFromUserType[ String(this.props.user.fields.Tipo) || 0 ]} 
+                        label={"Procurar Cuidadores"} 
                         navigateTo={Actions.PossibleRoutes.HOME.SEARCH}  
                         navigation={this.props.navigation} />
                     <SidemenuOption icon="user"
                         label="Meu Perfil" 
                         navigateTo={Actions.PossibleRoutes.HOME.PROFILE} 
                         navigation={this.props.navigation} />
-                    <SidemenuOption icon="list"
+                    {this.props.user.fields.Tipo == 1 ? (<SidemenuOption icon="list"
                         label="Procedimentos" 
                         navigateTo={Actions.PossibleRoutes.HOME.PROCEDURES} 
-                        navigation={this.props.navigation} />
+                        navigation={this.props.navigation} />) : null}
                     <SidemenuOption icon="log-out"
                         label="Sair"
                         onPress={this.promptUserLogout.bind(this)}/>
